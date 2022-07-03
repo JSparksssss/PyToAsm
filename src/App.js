@@ -1,26 +1,36 @@
 import './App.css';
 import React, { Component }  from 'react';
-import axios from 'axios'
+import AceEditor from "react-ace";
+
+import 'ace-builds/webpack-resolver';
+import "ace-builds/src-noconflict/mode-python";
+import "ace-builds/src-noconflict/theme-github";
+import "ace-builds/src-noconflict/ext-language_tools";
+
 
 class App extends Component {
   constructor(props){
     super(props);
     this.state={
       originCode:"",
-      assemblyCode:"",
+      pseudoCode:"",
       currentCode:""
     };
     
   }
+
   componentDidMount(){
     
   }
-  updateCode = (e) =>{
+
+  onsourceCodeChange = (newValue) =>{
+    // console.log(newValue)
     this.setState({
-      originCode:e.target.value 
-    },()=>{
-      // console.log(e.target.value);
+      originCode:newValue
     })
+  }
+  ontargetCodeChange = (newValue)=>{
+
   }
 
   convertCode = () =>{
@@ -31,46 +41,54 @@ class App extends Component {
     fetch("/dis?code=" + transformText).then(res => res.json()).then(data =>{
       console.log(data);
       this.setState({
-        currentCode:data.code,
+        pseudoCode:data.code,
       },()=>{
-        //Insert it into Assembly TextArea
-        var targetDOM = document.getElementById('asm-code').getElementsByTagName('textarea')[0];
-        targetDOM.value = this.state.currentCode;
       })
     });
-
-    
-  }
-
-  formatCode = (e) =>{
-    if(e.keyCode === 9){
-      e.preventDefault();
-      e.target.value = e.target.value + "\t";
-      
-    }
-    if(e.keyCode === 13){
-      var lastSymbol = e.target.value[e.target.value.length - 1];
-      if(lastSymbol === ":"){
-        e.preventDefault();
-        e.target.value = e.target.value  + "\n\t";
-      }
-    }
   }
 
   render(){
     return(
       <div className="App">
         <div className='container'> 
+        <div className='row'>
+          <div className='col'>Input</div>
+          <div className='col'>Options</div>
+          <div className='col'>Output</div>
+          
+        </div>
           <div className='row'>
-            <div className="col-sm form-floating" id="origin-code">
-              <textarea className="form-control" placeholder="Leave a comment here" id="floatingTextarea2" value={this.state.convertCode} onChange={(e)=>this.updateCode(e)} onKeyDown={(e)=>this.formatCode(e)}></textarea>
-              <label htmlFor="floatingTextarea2">Origin-code</label>
+          <AceEditor
+              className='col'
+              mode="python"
+              theme="github"
+              onChange={this.onsourceCodeChange}
+              name="PYTHON_CODE"
+              editorProps={{
+                  $blockScrolling: true,
+              }}
+              setOptions={{
+                wrapBehavioursEnabled:true
+              }}
+                />
+            
+            <div className='col'>
+              <button type="button" className="btn btn-outline-primary m-4" id="convert-code" onClick={()=>this.convertCode()} style={{minWidth:"200px"}}>Convert to Pseudo-code</button>
+              <button type="button" className="btn btn-outline-primary m-4" id="convert-code" style={{minWidth:"200px"}}>Convert to Flowchart</button>
             </div>
-            <button type="button" className="col-sm btn btn-outline-primary m-4" id="convert-code" onClick={()=>this.convertCode()} style={{width:"50px",height:"50px"}}>Convert</button>
-            <div className="col-sm form-floating" id="asm-code">
-              <textarea className="form-control" placeholder="Leave a comment here" id="floatingTextarea2"></textarea>
-              <label htmlFor="floatingTextarea2">Assembly-code</label>
-            </div>
+            <AceEditor
+                className='col'
+                      onChange={this.ontargetCodeChange}
+                      name="PSEUDO_CODE"
+                      editorProps={{
+                        $blockScrolling: true,
+                      }}
+                      setOptions={{
+                        wrapBehavioursEnabled:true
+                      }}
+                      value={this.state.pseudoCode}
+                      />
+            
           </div>
         </div>
       </div>
