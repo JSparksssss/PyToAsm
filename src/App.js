@@ -24,10 +24,11 @@ class App extends Component {
   }
 
   convertCode = () =>{
-    console.log(this.state.originCode);
-    let transformText = this.state.originCode.replaceAll("\n","(enter)").replaceAll("\t","(tab)");
+    console.log("Origin-code:",this.state.originCode);
+    let transformText = this.state.originCode.replaceAll("\n","(enter)").replaceAll("\t","(tab)").replaceAll("+","(add)");
+    console.log("Transform Text is:", transformText)
     //Convert Code 
-    fetch(`/dis?code=${transformText}`).then(res => res.json()).then(data =>{
+    fetch("/dis?code=" + transformText).then(res => res.json()).then(data =>{
       console.log(data);
       this.setState({
         currentCode:data.code,
@@ -59,16 +60,20 @@ class App extends Component {
   render(){
     return(
       <div className="App">
-        <div className="form-floating" id="origin-code">
-          <textarea className="form-control" placeholder="Leave a comment here" id="floatingTextarea2" style={{height: "100px"}} value={this.state.convertCode} onChange={(e)=>this.updateCode(e)} onKeyDown={(e)=>this.formatCode(e)}></textarea>
-          <label htmlFor="floatingTextarea2">Origin-code</label>
+        <div className='container'> 
+          <div className='row'>
+            <div className="col-sm form-floating" id="origin-code">
+              <textarea className="form-control" placeholder="Leave a comment here" id="floatingTextarea2" value={this.state.convertCode} onChange={(e)=>this.updateCode(e)} onKeyDown={(e)=>this.formatCode(e)}></textarea>
+              <label htmlFor="floatingTextarea2">Origin-code</label>
+            </div>
+            <button type="button" className="col-sm btn btn-outline-primary m-4" id="convert-code" onClick={()=>this.convertCode()} style={{width:"50px",height:"50px"}}>Convert</button>
+            <div className="col-sm form-floating" id="asm-code">
+              <textarea className="form-control" placeholder="Leave a comment here" id="floatingTextarea2"></textarea>
+              <label htmlFor="floatingTextarea2">Assembly-code</label>
+            </div>
+          </div>
         </div>
-        <button type="button" className="btn btn-outline-primary m-4" id="convert-code" onClick={()=>this.convertCode()}>Convert</button>
-        <div className="form-floating" id="asm-code">
-          <textarea className="form-control" placeholder="Leave a comment here" id="floatingTextarea2" style={{height: "100px"}}></textarea>
-          <label htmlFor="floatingTextarea2">Assembly-code</label>
-        </div>
-    </div>
+      </div>
     )
   }
 }
