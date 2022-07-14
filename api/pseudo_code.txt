@@ -1,9 +1,8 @@
 Module Start
-   i = 1
-   WhileLoop:
-   if variable i is greater than 10 then goto WhileLoopDone
-      i + 1
-      i = (i + 1)
-      goto WhileLoop
-   WhileLoopDone
+   ForLoop:
+      if variable is out of range(3) then goto ForLoopDone
+      call function print
+      input arg:i
+      goto ForLoop
+   ForLoopDone
 Module Done

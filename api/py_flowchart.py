@@ -213,18 +213,26 @@ def parse_body(tab,body):
     
 def parse_ast_tree(tab,tree):
     if isinstance(tree,ast.Module):
-        row = "Module Start"
-        file.write(row)
-        file.write('\n')
-    parse_body(tab,tree.body)
+        # row = "Module Start"
+        # file.write(row)
+        # file.write('\n')
+        row = "st=>start: Module Start"
+        flowchart_file.write(row)
+        flowchart_file.write('\n')
+
+    # parse_body(tab,tree.body)
         
     if isinstance (tree,ast.Module):
-        row = "Module Done"
-        file.write(row)
-        file.write('\n')
+        # row = "Module Done"
+        # file.write(row)
+        # file.write('\n')
+        row = "e=>end: Module End"
+        flowchart_file.write(row)
+        flowchart_file.write('\n')
+        
 
 #Main function
-def parse_pseudo_code(filename):
+def parse_flowchart_code(filename):
     ##To record all steps for output
     steps = []
     #Add a function to run the code to check whether there are any problems
@@ -238,8 +246,10 @@ def parse_pseudo_code(filename):
 #         print(b)
 # """)
     global file
+    global flowchart_file
     file = open("pseudo_code.txt", 'w')
-
+    flowchart_file = open("flowchart.txt", 'w')
+    print(flowchart_file)
     code = ""
     with open(filename) as f:
         code = code + f.read()
@@ -251,4 +261,7 @@ def parse_pseudo_code(filename):
     # pprint(tree.body) #Print all child nodes
 
     parse_ast_tree(1,tree)
+
+    #Remember close all file pointers
     file.close()
+    flowchart_file.close()
