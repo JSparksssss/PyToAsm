@@ -1,0 +1,19 @@
+{
+    "samples":[{
+        "type":"Statement",
+        "code":"b = 1\nprint(c)"
+    },{
+        "type":"Loop",
+        "code":"i = 0\nwhile i < 10:\n\tfor j in range(3):\n\t\tprint(j)\n\ti = i + 1"
+    },{
+        "type":"IfElse",
+        "code":"if a > 0:\n\tif b > 0:\n\t\tprint('ab')\n\t\tif c > 0:\n\t\t\tcgz()\n\t\telse:\n\t\t\tclez()\n\t\t\tif d > 0:\n\t\t\t\tif e > 0:\n\t\t\t\t\tprint('777777')\n\tprint('abc')\nelse:\n\talez()\nend_of_ifs()"
+    },{
+        "type":"FunctionDef",
+        "code":""
+    },{
+        "type":"WhileLoop",
+        "code":""
+    }]
+
+}

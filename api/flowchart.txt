@@ -1,9 +1,0 @@
-st3=>start: start Module
-io5=>inputoutput: input: 
-cond9=>operation: print(i) while  i in range(3)
-e21=>end: end Module
-
-st3->io5
-io5->cond9
-cond9->e21
-

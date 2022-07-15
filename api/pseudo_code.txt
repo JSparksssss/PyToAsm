@@ -1,8 +1,4 @@
 Module Start
-   ForLoop:
-      if variable is out of range(3) then goto ForLoopDone
-      call function print
-      input arg:i
-      goto ForLoop
-   ForLoopDone
+   a = 1
+   b = 1
 Module Done

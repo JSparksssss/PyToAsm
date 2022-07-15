@@ -8,7 +8,10 @@ import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/ext-language_tools";
 
 import {Flowdemo} from './components/Flowdemo';
+import Header from './components/Header';
+import Footer from './components/Footer';
 
+import Sample from "./Data/sample.json"
 class App extends Component {
   constructor(props){
     super(props);
@@ -20,7 +23,7 @@ class App extends Component {
       pseudoCodeStatus:false,
       flowChartCodeStatus:false
     };
-    
+    this.samples = Sample.samples
   }
 
   componentDidMount(){
@@ -70,19 +73,22 @@ class App extends Component {
       })
     });
   }
+  
+  insertSampleCode = (e) =>{
+    console.log(e.target.id)
+    var sampleCode = this.samples[e.target.id]
+    this.setState({
+      originCode:sampleCode.code
+    })
+  }
   render(){
     return(
-      <div className="App">
+      <div className="App bg-dark">
+        <Header/>
         <div className='container'> 
-        <div className='row'>
-          <div className='col'>Input</div>
-          <div className='col'>Options</div>
-          <div className='col'>Output</div>
-          
-        </div>
           <div className='row'>
           <AceEditor
-              className='col'
+              className="col"
               mode="python"
               theme="github"
               onChange={this.onsourceCodeChange}
@@ -93,13 +99,13 @@ class App extends Component {
               setOptions={{
                 wrapBehavioursEnabled:true
               }}
+              value={this.state.originCode}
                 />
-            
-            <div className='col'>
-              <button type="button" className="btn btn-outline-primary m-4" id="convert-code" onClick={()=>this.convertCode()} style={{minWidth:"200px"}}>Convert to Pseudo-code</button>
-              <button type="button" className="btn btn-outline-primary m-4" id="convert-fc" onClick={()=>this.convertFlowChart()}style={{minWidth:"200px"}}>Convert to Flowchart</button>
+          
+            <div className='col-4'>
+              <button type="button" className="btn btn-warning m-4 pta-btn-text" id="convert-code" onClick={()=>this.convertCode()} style={{minWidth:"200px"}}>Convert to Pseudo-code</button>
+              <button type="button" className="btn btn-warning m-4 pta-btn-text" id="convert-fc" onClick={()=>this.convertFlowChart()}style={{minWidth:"200px"}}>Convert to Flowchart</button>
             </div>
-            {this.state.pseudoCodeStatus?
             <AceEditor
                       className='col'
                       onChange={this.ontargetCodeChange}
@@ -111,17 +117,24 @@ class App extends Component {
                         wrapBehavioursEnabled:true
                       }}
                       value={this.state.pseudoCode}
-                      />: (this.state.flowChartCodeStatus?
+                      />
+
+            {this.state.flowChartCodeStatus?
                       <div id="canvas" className='col'>
                         <Flowdemo
                           code={this.state.flowChartCode}
-                      /></div>:<div className='col'></div>)
+                      /></div>:<React.Fragment/>
             }
             
-            {}
+            <p className='text-left text-light'>Samples</p>
+                <div className='row'>
+                  {this.samples.map((sample,index)=>(
+                    <div id={index} key={index} className='btn btn-warning col m-1 pta-btn-text' onClick={(e)=>{this.insertSampleCode(e)}}>{sample.type}</div>
+                  ))}
+                </div>
           </div>
         </div>
-            
+        <Footer/>  
       </div>
     )
   }
