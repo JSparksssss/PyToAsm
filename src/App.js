@@ -12,6 +12,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 
 import Sample from "./Data/sample.json"
+import ExeVisualization from './components/ExeVisualization';
 class App extends Component {
   constructor(props){
     super(props);
@@ -21,7 +22,8 @@ class App extends Component {
       currentCode:"",
       flowChartCode:"",
       pseudoCodeStatus:false,
-      flowChartCodeStatus:false
+      flowChartCodeStatus:false,
+      visualizeExecutionStatus:false
     };
     this.samples = Sample.samples
   }
@@ -36,10 +38,6 @@ class App extends Component {
       originCode:newValue
     })
   }
-  ontargetCodeChange = (newValue)=>{
-
-  }
-
   convertCode = () =>{
     console.log("Origin-code:",this.state.originCode);
     let transformText = this.state.originCode.replaceAll("\n","(enter)").replaceAll("\t","(tab)").replaceAll("+","(add)");
@@ -48,15 +46,13 @@ class App extends Component {
     fetch("/dis?code=" + transformText).then(res => res.json()).then(data =>{
       console.log(data);
       this.setState({
-        pseudoCode:data.code,
-        pseudoCodeStatus:true,
-        flowChartCodeStatus:false
+        pseudoCode:data.code
       },()=>{
       })
     });
   }
 
-  convertFlowChart = () =>{
+  justifyExecution = () =>{
 
     console.log("Origin-code:",this.state.originCode);
     let transformText = this.state.originCode.replaceAll("\n","(enter)").replaceAll("\t","(tab)").replaceAll("+","(add)");
@@ -64,13 +60,10 @@ class App extends Component {
     //Convert Code 
     fetch("/flowchart-sample?code=" + transformText).then(res => res.json()).then(data =>{
       console.log(data.code);
-
-      this.setState({
-        flowChartCode:data.code,
-        flowChartCodeStatus:true,
-        pseudoCodeStatus:false
-      },()=>{
-      })
+      if(data.code){
+        this.setState({ flowChartCode:data.code, visualizeExecutionStatus:true})
+      }
+      
     });
   }
   
@@ -81,11 +74,31 @@ class App extends Component {
       originCode:sampleCode.code
     })
   }
+
+  // justifyExecution = ()=>{
+  //   this.convertFlowChart();
+  //   //check whether the code can be run
+  //   if(this.state.flowChartCode !== ""){
+  //     this.setState({
+  //       visualizeExecutionStatus:true
+  //     })
+  //   }
+    
+  // }
+
+  backToEditPage = () =>{
+    this.setState({visualizeExecutionStatus:false})
+  }
   render(){
     return(
       <div className="App bg-dark">
         <Header/>
-        <div className='container'> 
+        {this.state.visualizeExecutionStatus? <ExeVisualization 
+          editCode={this.backToEditPage}
+          sourceCode = {this.state.originCode} 
+          fcCode = {this.state.flowChartCode}/>:
+        
+        (<div className='container'> 
           <div className='row'>
           <AceEditor
               className="col"
@@ -104,7 +117,8 @@ class App extends Component {
           
             <div className='col-4'>
               <button type="button" className="btn btn-warning m-4 pta-btn-text" id="convert-code" onClick={()=>this.convertCode()} style={{minWidth:"200px"}}>Convert to Pseudo-code</button>
-              <button type="button" className="btn btn-warning m-4 pta-btn-text" id="convert-fc" onClick={()=>this.convertFlowChart()}style={{minWidth:"200px"}}>Convert to Flowchart</button>
+              {/* <button type="button" className="btn btn-warning m-4 pta-btn-text" id="convert-fc" onClick={()=>this.convertFlowChart()}style={{minWidth:"200px"}}>Convert to Flowchart</button> */}
+              <button type="button" className="btn btn-warning m-4 pta-btn-text" id="execution" onClick={()=>this.justifyExecution()}style={{minWidth:"200px"}}>Visualization Execution</button>
             </div>
             <AceEditor
                       className='col'
@@ -118,13 +132,6 @@ class App extends Component {
                       }}
                       value={this.state.pseudoCode}
                       />
-
-            {this.state.flowChartCodeStatus?
-                      <div id="canvas" className='col'>
-                        <Flowdemo
-                          code={this.state.flowChartCode}
-                      /></div>:<React.Fragment/>
-            }
             
             <p className='text-left text-light'>Samples</p>
                 <div className='row'>
@@ -133,7 +140,7 @@ class App extends Component {
                   ))}
                 </div>
           </div>
-        </div>
+        </div>)}
         <Footer/>  
       </div>
     )

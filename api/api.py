@@ -106,7 +106,7 @@ def fc_sample():
 
 	source_py = "source_code.py"
 
-	os.system("python3 -m pyflowchart {0} > flowchart.txt".format(source_py))
+	os.system("python3 pyflowchart/__main__.py {0} --no-simplify > flowchart.txt".format(source_py))
 	print("system out",sys.stdout)
 
 	with open('flowchart.txt') as file:

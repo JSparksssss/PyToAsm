@@ -8,8 +8,8 @@ class Header extends Component{
 
     render(){
         return(
-            <nav class="navbar navbar-light bg-dark">
-            <a class="navbar-brand" href="#">
+            <nav className="navbar navbar-light bg-dark">
+            <a className="navbar-brand" href="#">
                 <img src={Logo} width="120" height="30" alt=""/>
             </a>
             </nav>

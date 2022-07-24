@@ -36,7 +36,6 @@ class Flowchart(NodesGroup):
         Returns:
             a flowchart.js DSL string including node definitions & connections
         """
-
         return self.fc_definition() + '\n' + self.fc_connection()
 
     @staticmethod

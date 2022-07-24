@@ -141,8 +141,13 @@ class FunctionDef(NodesGroup, AstNode):
         self.func_end = FunctionDefEnd(ast_func, **kwargs)
 
         # connect
-        self.func_start.connect(self.func_args_input)
-        self.func_args_input.connect(self.body_head)
+        if self.ast_object.args.args == []:
+            self.func_start.connect(self.body_head)
+        else:
+            self.func_start.connect(self.func_args_input)
+            self.func_args_input.connect(self.body_head)
+            
+        print("Change detect")
         for t in self.body_tails:
             if isinstance(t, Node):
                 t.connect(self.func_end)

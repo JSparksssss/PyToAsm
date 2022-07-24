@@ -42,11 +42,12 @@ def detect_decode(file_content: bytes) -> str:
         encoding = "UTF-8"
 
     # decode file content by detected encoding
+    # the source code
     try:
         content = file_content.decode(encoding=encoding)
     except TypeError:  # TypeError: decode() argument 1 must be str, not None
         content = file_content.decode()
-
+    
     return content
 
 
@@ -69,7 +70,7 @@ if __name__ == '__main__':
 
     # code_file: open as binary, detect encoding and decode in main later
     parser.add_argument('code_file', type=argparse.FileType('rb'))
-
+    
     parser.add_argument('-f', '--field', default="", type=str, help="field to draw flowchart. (e.g. Class.method)")
     parser.add_argument('-i', '--inner', action="store_true", help="parse the body of field")
     parser.add_argument('--no-simplify', action="store_false", help="do not simplify the one-line-body If/Loop")

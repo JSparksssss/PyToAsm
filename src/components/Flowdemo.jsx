@@ -45,13 +45,6 @@ export class Flowdemo extends Component {
       elementText: "none"
     };
   }
-  
-  componentWillReceiveProps(nextProps){
-    this.setState({
-      code:`${this.nextProps.code}`
-    })
-
-  }
 
   handleCodeChange(e) {
     this.setState({
@@ -68,11 +61,11 @@ export class Flowdemo extends Component {
   render() {
     const { code, opt, elementText } = this.state;
     return (
-      <Flowchart
-          chartCode={code}
-          options={opt}
-          onClick={(elementText) => this.setState({ elementText })}
-        />
+        <Flowchart  
+            chartCode={code}
+            options={opt}
+            onClick={(elementText) => this.setState({ elementText })}
+          />
     );
   }
 }

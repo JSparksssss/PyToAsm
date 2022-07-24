@@ -274,7 +274,7 @@ class StartNode(Node):
     def __init__(self, name: str):
         super().__init__()
         self.node_name = f'st{self.id}'
-        self.node_text = f'start {name}'
+        self.node_text = f'start{name}'
 
 
 class EndNode(Node):
@@ -292,11 +292,11 @@ class OperationNode(Node):
     """OperationNode is a Node subclass for flowchart.js `operation` node
     """
     node_type = 'operation'
-
     def __init__(self, operation: str):
         super().__init__()
         self.node_name = f'op{self.id}'
         self.node_text = f'{operation}'
+  
 
 
 class InputOutputNode(Node):

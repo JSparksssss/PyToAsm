@@ -1,4 +1,5 @@
 Module Start
    a = 1
-   b = 1
+   a + 1
+   b = (a + 1)
 Module Done

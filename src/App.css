@@ -42,3 +42,10 @@
   background-color: #EAE7DA;
   border-color: #EAE7DA;
 }
+.visualize-code{
+  text-align: left;
+  display: block;
+}
+.pta-highlight-code{
+  background-color: yellow;
+}

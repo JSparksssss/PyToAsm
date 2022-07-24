@@ -1,2 +1,3 @@
-a = 1
-b = 1
+def Module():
+	for i in range(3):
+	    print(i)
