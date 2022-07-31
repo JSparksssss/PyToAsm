@@ -1,6 +1,16 @@
 import ast
 from pprint import pprint
 
+import astunparse
+
+def incremental_pseudo():
+    global PSEUDO_INDEX
+    PSEUDO_INDEX = PSEUDO_INDEX + 1
+
+def incremental_py():
+    global PY_INDEX
+    PY_INDEX = PY_INDEX + 1
+
 def generate_tab(number):
     tab_list = []
     for i in range(number):
@@ -14,6 +24,15 @@ def while_cond_args(test,goto):
             cond = "if variable "+ test.left.id +" "+ cmp_label(test.ops[0]) + " " + str(test.comparators[0].value) + " then goto " + goto
             return cond
     return True
+
+def loop_cond_expr(node):
+    source = astunparse.unparse(node)
+    loop_statement = source.strip()
+    lines = loop_statement.splitlines()
+    if len(lines) >= 1:
+        return lines[0]
+    else:
+        return True
 
 def iter_args(iter,goto):
     if isinstance(iter,ast.Call):
@@ -53,61 +72,76 @@ def assign_id_or_value(node):
         return node.id
 
 def parseAssign(tab,node):
-    #判断有运算
     if isinstance(node,ast.BinOp) :
         left_node_is_null = isinstance(node.left,ast.Name)or isinstance(node.left,ast.Constant)
         right_node_is_null = isinstance(node.right,ast.Name)or isinstance(node.right,ast.Constant)
         if left_node_is_null and right_node_is_null:     
-            row = generate_tab(tab)+ast.unparse(node)
+            row = generate_tab(tab)+ast.unparse(node) + "\n"
             file.write(row)
-            file.write('\n')
+            incremental_pseudo()
             return "("+ ast.unparse(node)+ ")"
 
         elif left_node_is_null == False and right_node_is_null == False:
             left_node =str(parseAssign(tab,node.left))
             right_node = str(parseAssign(tab,node.right))
-            result = left_node + " "+ operation_label(node.op) + " "+ right_node
-            row = generate_tab(tab)+result
+            result = left_node + " "+ operation_label(node.op) + " "+ right_node 
+            row = generate_tab(tab)+result + "\n"
             file.write(row)
-            file.write('\n')
+            incremental_pseudo()
             return result
 
         elif left_node_is_null == True :
             left_node = str(assign_id_or_value(node.left))
             right_node = str(parseAssign(tab,node.right))
             result = left_node + " "+ operation_label(node.op) + " "+ right_node
-            row = generate_tab(tab)+result
-            file.write(row)
-            file.write('\n')
+            row = generate_tab(tab)+result + "\n"
+            file.write(row) 
+            incremental_pseudo()
             return result
 
         elif right_node_is_null == True :
             left_node =str(parseAssign(tab,node.left))
             right_node = str(assign_id_or_value(node.right))
             result = left_node + " "+ operation_label(node.op) + " "+ right_node
-            row = generate_tab(tab)+result
+            row = generate_tab(tab)+ result + "\n"
             file.write(row)
-            file.write('\n')
+            incremental_pseudo()
             return result
 
     elif isinstance(node,ast.Name):
         return node.id
     elif isinstance(node,ast.Constant):
         return node.value
-def parseForLoop(tab,node):
-    row = generate_tab(tab)+"ForLoop:"
-    file.write(row)
-    file.write('\n')
 
+def parseAssignWrapper(tab,node):
+    el_pseudo_index = []
+    start_point = PSEUDO_INDEX
+    result = str(parseAssign(tab,node.value))
+    row = generate_tab(tab) + node.targets[0].id + " " + "=" + " "+result + "\n"
+    file.write(row)
+    incremental_pseudo()
+
+    for i in range(start_point,PSEUDO_INDEX):
+        el_pseudo_index.append(i)
+    
+    return el_pseudo_index
+    
+def parseForLoop(tab,node):
+    el_pseudo_index = []
+    row = generate_tab(tab)+"ForLoop:" + "\n"
+    file.write(row)
+    el_pseudo_index.append(PSEUDO_INDEX)
+    incremental_pseudo()
+    
     #The args
     if node.iter:
         cond = iter_args(node.iter,"ForLoopDone")
-        row = generate_tab(tab+1)+cond
+        row = generate_tab(tab+1) + cond + "\n"
         file.write(row)
-        file.write('\n')
+        el_pseudo_index.append(PSEUDO_INDEX)
+        incremental_pseudo()
 
     parse_body(tab + 1,node.body)
-
 
     #modify the iter number
     #
@@ -115,130 +149,166 @@ def parseForLoop(tab,node):
     #
 
 
-    row = generate_tab(tab + 1) +"goto ForLoop"
+    row = generate_tab(tab + 1) + "goto ForLoop" + "\n"
     file.write(row)
-    file.write('\n')
+    el_pseudo_index.append(PSEUDO_INDEX)
+    incremental_pseudo()
 
-    row = generate_tab(tab) + "ForLoopDone"
+    row = generate_tab(tab) + "ForLoopDone" + "\n"
     file.write(row)
-    file.write('\n')
+    el_pseudo_index.append(PSEUDO_INDEX)
+    incremental_pseudo()
 
-    return True
+    return el_pseudo_index
 
 ##add try catch
 def parseWhileLoop(tab,node):
-    row = generate_tab(tab)+"WhileLoop:"
+    el_pseudo_index = []
+    row = generate_tab(tab)+"WhileLoop:"+"\n"
     file.write(row)
-    file.write('\n')
+    el_pseudo_index.append(PSEUDO_INDEX)
+    incremental_pseudo()
 
     #The args
     if node.test:
         cond = while_cond_args(node.test,"WhileLoopDone")
-        print(generate_tab(tab)+cond)
-        row = generate_tab(tab)+cond
+        row = generate_tab(tab)+cond + "\n"
         file.write(row)
-        file.write('\n')
+        el_pseudo_index.append(PSEUDO_INDEX)
+        incremental_pseudo()
 
     parse_body(tab + 1,node.body)
 
-    row = generate_tab(tab + 1) +"goto WhileLoop"
+    row = generate_tab(tab + 1) +"goto WhileLoop" + "\n"
     file.write(row)
-    file.write('\n')
+    el_pseudo_index.append(PSEUDO_INDEX)
+    incremental_pseudo()
 
-    row = generate_tab(tab) + "WhileLoopDone"
+    row = generate_tab(tab) + "WhileLoopDone" + "\n"
     file.write(row)
-    file.write('\n')
+    el_pseudo_index.append(PSEUDO_INDEX)
+    incremental_pseudo()
 
-    return True
+    return el_pseudo_index
 
 def parseExpr(tab,node):
+    el_pseudo_index = []
     if node.value and isinstance(node.value,ast.Call):
-        row = generate_tab(tab)+"call function "+ node.value.func.id
+        row = generate_tab(tab)+"call function "+ node.value.func.id + "\n"
         file.write(row)
-        file.write('\n')
+        el_pseudo_index.append(PSEUDO_INDEX)
+        incremental_pseudo()
         plural = True if len(node.value.args) >= 2 else False
         if plural:
             args = " ".join([ str(arg.value) for arg in node.value.args ])
-            row = generate_tab(tab)+ "input args: " + args
+            row = generate_tab(tab)+ "input args: " + args + "\n"
             file.write(row)
-            file.write('\n')
+            el_pseudo_index.append(PSEUDO_INDEX)
+            incremental_pseudo()
         else:
             if(hasattr(node.value.args[0],"id")):
-                row = generate_tab(tab)+ "input arg:" + node.value.args[0].id
+                row = generate_tab(tab)+ "input arg:" + node.value.args[0].id + "\n"
             elif(hasattr(node.value.args[0],"value")):
-                row = generate_tab(tab)+ "input arg:" + node.value.args[0].value
-            file.write(row)  
-            file.write('\n')   
-    return True
+                row = generate_tab(tab)+ "input arg:" + node.value.args[0].value + "\n"
+            file.write(row)
+            el_pseudo_index.append(PSEUDO_INDEX)
+            incremental_pseudo()
+    return el_pseudo_index
 
 def parseIfElse(tab,node):
+    el_pseudo_index = []
     if isinstance(node.test, ast.Compare):
-        row = generate_tab(tab)+"If " + str(node.test.left.id) + " " + str(cmp_label(node.test.ops[0])) + " "+ str(node.test.comparators[0].value) + ", then skip the code"
+        row = generate_tab(tab)+"If " + str(node.test.left.id) + " " + str(cmp_label(node.test.ops[0])) + " "+ str(node.test.comparators[0].value) + ", then skip the code" + "\n"
     file.write(row)
-    file.write("\n")
+    el_pseudo_index.append(PSEUDO_INDEX)
+    incremental_pseudo()
 
     parse_body(tab + 1, node.body)
 
     if hasattr(node,'orelse'):
         if isinstance(node.test, ast.Compare):
-            row = generate_tab(tab)+"If " + str(node.test.left.id) + " " + str(cmp_label(node.test.ops[0])) + " "+ str(node.test.comparators[0].value) + ", then run these code"
+            row = generate_tab(tab)+"If " + str(node.test.left.id) + " " + str(cmp_label(node.test.ops[0])) + " "+ str(node.test.comparators[0].value) + ", then run these code" + "\n"
         file.write(row)
-        file.write("\n")
+        el_pseudo_index.append(PSEUDO_INDEX)
+        incremental_pseudo()
 
         parse_body(tab + 1, node.orelse)
     
-    return True
+    return el_pseudo_index
 
 def parse_body(tab,body):
-    for node in body :    
+    for node in body :
+
+        incremental_py()
+
+        el = {"py_index":PY_INDEX,"pseudo_index":[]}
+
         if isinstance(node,ast.Assign):
-            result = str(parseAssign(tab,node.value))
-            row = generate_tab(tab) + node.targets[0].id + " " + "=" + " "+result
-            file.write(row)
-            file.write('\n')
+            print("Assign")
+            el["pseudo_index"]=parseAssignWrapper(tab,node)
+
         elif isinstance(node,ast.For):
-            parseForLoop(tab,node)
+            el["pseudo_index"] = parseForLoop(tab,node)
+
         elif isinstance(node,ast.While):
-            parseWhileLoop(tab,node)
+            el["pseudo_index"] = parseWhileLoop(tab,node)
+
         elif isinstance(node,ast.FunctionDef):
+            el["type"] = FUNCTIONDEF
+            el["llc"] = ""
             print("ast.FunctionDef")
             print(node)
+
         elif isinstance(node,ast.Expr):
         #check value whether it is call function
-            parseExpr(tab,node)
+            el["pseudo_index"] = parseExpr(tab,node)
+
         elif isinstance(node,ast.If):
-            parseIfElse(tab,node)
+            el["pseudo_index"] = parseIfElse(tab,node)
+
+        map_2_low_level_code.append(el)
+        
+
         #elif isinstance(node,ast.Switch):
         #Python not like to provide switch function
-    
+ 
 def parse_ast_tree(tab,tree):
     if isinstance(tree,ast.Module):
         row = "Module Start"
         file.write(row)
         file.write('\n')
+
     parse_body(tab,tree.body)
         
     if isinstance (tree,ast.Module):
         row = "Module Done"
         file.write(row)
-        file.write('\n')
 
 #Main function
 def parse_pseudo_code(filename):
-    ##To record all steps for output
-    steps = []
+    ##To record all relationships
+    global map_2_low_level_code;
+    map_2_low_level_code = []
+
     #Add a function to run the code to check whether there are any problems
 
-    #No indent for the first row in the parse bracket
-#     tree = ast.parse("""
-# a = 1
-# b = (a + 1)*2
-# for i in range(3):
-#     for j in range(2):
-#         print(b)
-# """)
+    #These variables are for the llc_parse_tree
+    global ASSIGN,FOR,WHILE,FUNCTIONDEF,EXPR,IFELSE
+    ASSIGN = "assign"
+    FOR = "for"
+    WHILE = "while"
+    FUNCTIONDEF = "functiondef"
+    EXPR = "expression"
+    IFELSE = "ifelse"
+
     global file
     file = open("pseudo_code.txt", 'w')
+
+    #Record the index for mapping
+    global PSEUDO_INDEX,PY_INDEX
+    PSEUDO_INDEX = 1
+    PY_INDEX = -1
+    
 
     code = ""
     with open(filename) as f:
@@ -251,4 +321,7 @@ def parse_pseudo_code(filename):
     # pprint(tree.body) #Print all child nodes
 
     parse_ast_tree(1,tree)
+
     file.close()
+    return map_2_low_level_code
+    

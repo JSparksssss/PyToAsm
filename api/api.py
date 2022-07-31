@@ -26,11 +26,10 @@ def dis_python_code():
 	os.rename(file_name, base + '.py')
 
 	source_py = "source_code.py"
-	target_py = "pseudo_code.txt"
 
 	try:
 		dis_code = ""
-		ast_node.parse_pseudo_code(source_py)
+		py_2_llc_map = ast_node.parse_pseudo_code(source_py)
 		file = open('pseudo_code.txt','r')
 		dis_code = file.read()
 		file.close()
@@ -40,7 +39,7 @@ def dis_python_code():
 		print(sys.exc_info()[0])
 		print("The ast tree generated error.")
 
-	return jsonify(code=str(dis_code))
+	return jsonify(code=str(dis_code),map=py_2_llc_map)
  
 @app.route('/flowchart')
 def fc_python_code():

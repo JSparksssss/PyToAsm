@@ -1,0 +1,7 @@
+/* background: adjust-hue($base-color, $offset + $spectrum / $num-colors * $i); */
+.highlight {
+  background-color: yellow;
+  position: absolute;
+}
+
+/*# sourceMappingURL=global.css.map */

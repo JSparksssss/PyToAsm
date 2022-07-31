@@ -1,0 +1,9 @@
+/* background: adjust-hue($base-color, $offset + $spectrum / $num-colors * $i); */
+@mixin random-bgr(){
+  background: rgb(random(255), random(255), random(255));
+}
+
+.highlight {
+  $base-color: #996B4D;
+  background-color: rgb(245, 245, 245);
+}

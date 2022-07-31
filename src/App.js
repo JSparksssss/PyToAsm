@@ -1,4 +1,6 @@
 import './App.css';
+import './global.css';
+
 import React, { Component }  from 'react';
 import AceEditor from "react-ace";
 
@@ -7,12 +9,21 @@ import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/theme-github";
 import "ace-builds/src-noconflict/ext-language_tools";
 
-import {Flowdemo} from './components/Flowdemo';
 import Header from './components/Header';
 import Footer from './components/Footer';
 
 import Sample from "./Data/sample.json"
 import ExeVisualization from './components/ExeVisualization';
+
+function findLLC(pyIndex,body){
+  for(var i = 0; i < body.length; i++){
+    if(pyIndex === body[i].py_index){
+      return body[i].pseudo_index
+  }
+  }
+  return null 
+}
+
 class App extends Component {
   constructor(props){
     super(props);
@@ -23,7 +34,9 @@ class App extends Component {
       flowChartCode:"",
       pseudoCodeStatus:false,
       flowChartCodeStatus:false,
-      visualizeExecutionStatus:false
+      visualizeExecutionStatus:false,
+      markers:[],
+      py2llcmap:null
     };
     this.samples = Sample.samples
   }
@@ -32,23 +45,67 @@ class App extends Component {
     
   }
 
+  renderHighlight = (pyIndex) =>{
+
+    this.setState({markers:[]})
+
+    //initialize the Highlight markers
+    let markers = []
+
+    //Find the index of low level code
+    console.log(this.state.py2llcmap)
+    var llc = findLLC(pyIndex,this.state.py2llcmap)
+
+    try{
+        for (var i = 0; i < llc.length; i++){
+          var index = llc[i]
+          markers.push({startRow:index,startCol:0,endRow:index+1,endCol:0,className:"highlight",type:"background"});
+        }
+
+        this.setState({markers:markers},()=>{
+          console.log(this.state.markers)
+        })
+
+    }catch(e){
+      alert("This pseudo code is not match")
+    }
+    
+    // markers.push({startRow:0,startCol:0,endRow:1,endCol:0,className:"ace_active-line",type:"background"});
+
+    
+
+  }
+
   onsourceCodeChange = (newValue) =>{
+    if(this.state.pseudoCodeStatus === true){
+      this.setState({pseudoCodeStatus:false})
+    }
     // console.log(newValue)
     this.setState({
       originCode:newValue
     })
   }
+
+  onFocusCode = (e) =>{
+    if(this.state.pseudoCodeStatus === true){
+      //Get the target code from the original editor
+      var pyTargetCode = e.cursor.row
+      this.renderHighlight(pyTargetCode)
+    }
+  }
+
   convertCode = () =>{
     console.log("Origin-code:",this.state.originCode);
     let transformText = this.state.originCode.replaceAll("\n","(enter)").replaceAll("\t","(tab)").replaceAll("+","(add)");
     console.log("Transform Text is:", transformText)
     //Convert Code 
     fetch("/dis?code=" + transformText).then(res => res.json()).then(data =>{
-      console.log(data);
       this.setState({
-        pseudoCode:data.code
-      },()=>{
-      })
+        markers:[],
+        pseudoCodeStatus:true,
+        pseudoCode:data.code,
+        py2llcmap:data.map
+      })   
     });
   }
 
@@ -68,27 +125,17 @@ class App extends Component {
   }
   
   insertSampleCode = (e) =>{
-    console.log(e.target.id)
     var sampleCode = this.samples[e.target.id]
     this.setState({
       originCode:sampleCode.code
     })
   }
 
-  // justifyExecution = ()=>{
-  //   this.convertFlowChart();
-  //   //check whether the code can be run
-  //   if(this.state.flowChartCode !== ""){
-  //     this.setState({
-  //       visualizeExecutionStatus:true
-  //     })
-  //   }
-    
-  // }
 
   backToEditPage = () =>{
     this.setState({visualizeExecutionStatus:false})
   }
+
   render(){
     return(
       <div className="App bg-dark">
@@ -105,6 +152,7 @@ class App extends Component {
               mode="python"
               theme="github"
               onChange={this.onsourceCodeChange}
+              onCursorChange = {(e)=>this.onFocusCode(e)}
               name="PYTHON_CODE"
               editorProps={{
                   $blockScrolling: true,
@@ -129,8 +177,11 @@ class App extends Component {
                       }}
                       setOptions={{
                         wrapBehavioursEnabled:true
+
                       }}
+                      highlightActiveLine={false}
                       value={this.state.pseudoCode}
+                      markers={this.state.markers}
                       />
             
             <p className='text-left text-light'>Samples</p>

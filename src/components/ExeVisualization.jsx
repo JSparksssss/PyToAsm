@@ -16,13 +16,13 @@ class ExeVisualization extends Component{
         var result = []
         for(var i = 0; i < this.sourceCodeArray.length; i++){
             console.log(this.sourceCodeArray[i]);
-            var el = <span className={"visualize-code "+ (this.state.exeIndex === i ? "pta-highlight-code":"")}>  {this.sourceCodeArray[i]}</span>
+            var el = <tr className={"visualize-code "+ (this.state.exeIndex === i ? "pta-highlight-code":"")}>  {this.sourceCodeArray[i]}</tr>
             result.push(el)
         }
         return(
-            <div>
+            <table>
                 {result}
-            </div>)
+            </table>)
     }
 
     gotoNextLine = () =>{
