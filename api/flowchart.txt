@@ -1,11 +1,19 @@
 st3=>start: start Module
 io5=>inputoutput: input: 
-op8=>operation: b = 1
-sub10=>subroutine: print(c)
-e12=>end: end Module
+op8=>operation: i = 0
+cond11=>condition: while (i < 10)
+cond31=>condition: for j in range(3)
+sub38=>subroutine: print(j)
+op42=>operation: i = (i + 1)
+e46=>end: end Module
 
 st3->io5
 io5->op8
-op8->sub10
-sub10->e12
+op8->cond11
+cond11(yes)->cond31
+cond31(yes)->sub38
+sub38(left)->cond31
+cond31(no)->op42
+op42(left)->cond11
+cond11(no)->e46
 
