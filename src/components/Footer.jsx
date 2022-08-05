@@ -7,7 +7,7 @@ class Footer extends Component{
     }
     render(){
         return(
-            <footer className="text-right text-lg-start text-white bg-dark">
+            <footer className="text-right text-lg-start text-white bg-dark fixed-bottom">
                 <hr className="my-3"/>
                 <div className='text-center'>Mengqi Jiang from University of Glasgow</div>
                 <div className='text-center'>

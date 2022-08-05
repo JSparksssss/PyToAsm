@@ -57,14 +57,16 @@ export class Flowdemo extends Component {
       opt: JSON.parse(e.target.value)
     });
   }
-
+  elText(e){
+    console.log(e)
+  }
   render() {
     const { code, opt, elementText } = this.state;
     return (
         <Flowchart  
             chartCode={code}
             options={opt}
-            onClick={(elementText) => this.setState({ elementText })}
+            onClick={(elementText) => this.elText(elementText)}
           />
     );
   }

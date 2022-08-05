@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Flowdemo } from './Flowdemo';
+import AceEditor from "react-ace";
 
 class ExeVisualization extends Component{
     constructor(props){
@@ -16,7 +17,7 @@ class ExeVisualization extends Component{
         var result = []
         for(var i = 0; i < this.sourceCodeArray.length; i++){
             console.log(this.sourceCodeArray[i]);
-            var el = <tr className={"visualize-code "+ (this.state.exeIndex === i ? "pta-highlight-code":"")}>  {this.sourceCodeArray[i]}</tr>
+            var el = <tr className={"visualize-code "+ (this.state.exeIndex === i ? "pta-highlight-code":"")}>{this.sourceCodeArray[i]}</tr>
             result.push(el)
         }
         return(
@@ -36,16 +37,28 @@ class ExeVisualization extends Component{
             exeIndex:this.state.exeIndex - 1
         })
     }
-    
+
     render(){
         return(<div className='container'>
             <div className='row'>  
-                <div className='bg-light col'>
-                    {this.generateCodeTable()}
-                </div>
+            <AceEditor
+              className="col"
+              mode="python"
+              theme="github"
+              onCursorChange = {(e)=>this.onFocusCode(e)}
+              name="PYTHON_CODE"
+              editorProps={{
+                  $blockScrolling: true,
+              }}
+              setOptions={{
+                readOnly:true,
+                wrapBehavioursEnabled:true
+              }}
+              value={this.props.sourceCode}
+                />
                 <div className='col'>
-                    <button type="button" className="btn btn-warning m-4 pta-btn-text" id="forward" onClick={()=>this.gotoNextLine()} style={{minWidth:"200px"}}>Next Code</button>
-                    <button type="button" className="btn btn-warning m-4 pta-btn-text" id="rewind" onClick={()=>this.gotoLastLine()}style={{minWidth:"200px"}}>Last Code</button>
+                    {/* <button type="button" className="btn btn-warning m-4 pta-btn-text" id="forward" onClick={()=>this.gotoNextLine()} style={{minWidth:"200px"}}>Next Code</button>
+                    <button type="button" className="btn btn-warning m-4 pta-btn-text" id="rewind" onClick={()=>this.gotoLastLine()}style={{minWidth:"200px"}}>Last Code</button> */}
                     <button type="button" className="btn btn-danger m-4 pta-btn-text" id="edit-code" onClick={this.props.editCode}style={{minWidth:"200px"}}>Back to edit code</button>
                 </div>
                 <div id="canvas" className='bg-light col'>
@@ -53,6 +66,9 @@ class ExeVisualization extends Component{
                         code={this.fcCode}
                     /></div>
                 </div>
+                <footer className='bg-dark' style={{"height":"8em"}}>
+
+                </footer>
             </div>)
     }
 }

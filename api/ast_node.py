@@ -1,5 +1,6 @@
 import ast
 from pprint import pprint
+from tokenize import Name
 
 import astunparse
 
@@ -10,6 +11,10 @@ def incremental_pseudo():
 def incremental_py():
     global PY_INDEX
     PY_INDEX = PY_INDEX + 1
+
+def incremental_index():
+    global LABEL_INDEX
+    LABEL_INDEX = LABEL_INDEX + 1
 
 def generate_tab(number):
     tab_list = []
@@ -37,7 +42,10 @@ def loop_cond_expr(node):
 def iter_args(iter,goto):
     if isinstance(iter,ast.Call):
         if(iter.func.id == "range"):
-            cond = "if variable is out of range(" + str(iter.args[0].value) + ")"+" then goto " + goto
+            if isinstance(iter.args[0],ast.Constant):
+                cond = "if variable is out of range(" + str(iter.args[0].value) + ")"+" then goto " + goto
+            # elif object_class_name == 'Name':
+            #     cond = "if variable is out of range(" + str(iter.args[0].id) + ")"+" then goto " + goto
             return cond
     return True
 
@@ -116,6 +124,16 @@ def parseAssign(tab,node):
 def parseAssignWrapper(tab,node):
     el_pseudo_index = []
     start_point = PSEUDO_INDEX
+    if isinstance(node.value,ast.Call):
+        print(node)
+        el_pseudo_index = parseExpr(tab,node)
+        incremental_pseudo()
+        row = "The result above will be assigned to "+node.targets[0].id
+        file.write(row)
+        el_pseudo_index.append(PSEUDO_INDEX)
+        incremental_pseudo()
+        return el_pseudo_index
+    
     result = str(parseAssign(tab,node.value))
     row = generate_tab(tab) + node.targets[0].id + " " + "=" + " "+result + "\n"
     file.write(row)
@@ -128,19 +146,26 @@ def parseAssignWrapper(tab,node):
     
 def parseForLoop(tab,node):
     el_pseudo_index = []
-    row = generate_tab(tab)+"ForLoop:" + "\n"
+    label_index = LABEL_INDEX
+    for_label = "LABEL{0}".format(label_index)
+    row = for_label + "\n"
     file.write(row)
     el_pseudo_index.append(PSEUDO_INDEX)
+    
     incremental_pseudo()
     
+
     #The args
     if node.iter:
-        cond = iter_args(node.iter,"ForLoopDone")
-        row = generate_tab(tab+1) + cond + "\n"
+        cond = iter_args(node.iter,"LABEL{0}".format(label_index + 1))
+        row = generate_tab(tab) + cond + "\n"
         file.write(row)
         el_pseudo_index.append(PSEUDO_INDEX)
         incremental_pseudo()
 
+    #A loop structure will have two labels, index should be increased twice.
+    incremental_index()
+    incremental_index()
     parse_body(tab + 1,node.body)
 
     #modify the iter number
@@ -149,45 +174,53 @@ def parseForLoop(tab,node):
     #
 
 
-    row = generate_tab(tab + 1) + "goto ForLoop" + "\n"
+    row = generate_tab(tab + 1) + "goto " + for_label + "\n"
     file.write(row)
     el_pseudo_index.append(PSEUDO_INDEX)
     incremental_pseudo()
 
-    row = generate_tab(tab) + "ForLoopDone" + "\n"
+    row = "LABEL{0}".format(label_index+1) + "\n"
     file.write(row)
     el_pseudo_index.append(PSEUDO_INDEX)
     incremental_pseudo()
+    incremental_index()
 
     return el_pseudo_index
 
 ##add try catch
 def parseWhileLoop(tab,node):
     el_pseudo_index = []
-    row = generate_tab(tab)+"WhileLoop:"+"\n"
+    label_index = LABEL_INDEX
+    while_label = "LABEL{0}".format(label_index)
+
+    row = while_label + "\n"
     file.write(row)
     el_pseudo_index.append(PSEUDO_INDEX)
     incremental_pseudo()
 
     #The args
     if node.test:
-        cond = while_cond_args(node.test,"WhileLoopDone")
+        cond = while_cond_args(node.test,"LABEL{0}".format(label_index + 1))
         row = generate_tab(tab)+cond + "\n"
         file.write(row)
         el_pseudo_index.append(PSEUDO_INDEX)
         incremental_pseudo()
-
+    
+    #A loop structure contains two labels
+    incremental_index()
+    incremental_index()
     parse_body(tab + 1,node.body)
 
-    row = generate_tab(tab + 1) +"goto WhileLoop" + "\n"
+    row = generate_tab(tab + 1) +"goto " + while_label + "\n"
     file.write(row)
     el_pseudo_index.append(PSEUDO_INDEX)
     incremental_pseudo()
 
-    row = generate_tab(tab) + "WhileLoopDone" + "\n"
+    row ="LABEL{0}".format(label_index+1) + "\n"
     file.write(row)
     el_pseudo_index.append(PSEUDO_INDEX)
     incremental_pseudo()
+    incremental_index()
 
     return el_pseudo_index
 
@@ -198,9 +231,20 @@ def parseExpr(tab,node):
         file.write(row)
         el_pseudo_index.append(PSEUDO_INDEX)
         incremental_pseudo()
+
+        if node.value.args == []:
+            return el_pseudo_index
+
         plural = True if len(node.value.args) >= 2 else False
         if plural:
-            args = " ".join([ str(arg.value) for arg in node.value.args ])
+            args = []
+            for arg in node.value.args:
+                if isinstance(arg,ast.Constant):
+                    args.append(arg.value)
+                elif isinstance(arg,ast.Name):
+                    args.append(arg.id)
+
+            args = " ".join([arg for arg in args])
             row = generate_tab(tab)+ "input args: " + args + "\n"
             file.write(row)
             el_pseudo_index.append(PSEUDO_INDEX)
@@ -217,30 +261,117 @@ def parseExpr(tab,node):
 
 def parseIfElse(tab,node):
     el_pseudo_index = []
+    label_index = LABEL_INDEX
+    if_else_label = "LABEL{0}".format(label_index)
     if isinstance(node.test, ast.Compare):
-        row = generate_tab(tab)+"If " + str(node.test.left.id) + " " + str(cmp_label(node.test.ops[0])) + " "+ str(node.test.comparators[0].value) + ", then skip the code" + "\n"
+        row = generate_tab(tab)+"If " + str(node.test.left.id) + " " + str(cmp_label(node.test.ops[0])) + " "+ str(node.test.comparators[0].value) + ", then goto " +if_else_label+ "\n"
     file.write(row)
     el_pseudo_index.append(PSEUDO_INDEX)
     incremental_pseudo()
 
+    #Enter a new body, to avoid it will lead to another cond 
+    incremental_index()
     parse_body(tab + 1, node.body)
 
-    if hasattr(node,'orelse'):
-        if isinstance(node.test, ast.Compare):
-            row = generate_tab(tab)+"If " + str(node.test.left.id) + " " + str(cmp_label(node.test.ops[0])) + " "+ str(node.test.comparators[0].value) + ", then run these code" + "\n"
+    row = generate_tab(tab + 1)+ "goto LABEL{0}".format(label_index+1)+ "\n"
+    file.write(row)
+    el_pseudo_index.append(PSEUDO_INDEX)
+    incremental_pseudo()
+
+    #if has else 
+    if hasattr(node,"orelse"):
+        row = if_else_label + "\n"
+        file.write(row)
+        incremental_pseudo()
+        
+        if node.orelse != []:
+            #If else body contain IF node, skip the incremental_py()
+            if isinstance(node.orelse[0],ast.If) == False:
+                incremental_py()
+            #There is a else body in if-else
+            parse_body(tab + 1, node.orelse)
+
+        row = generate_tab(tab + 1)+ "goto LABEL{0}".format(label_index+1) +"\n"
         file.write(row)
         el_pseudo_index.append(PSEUDO_INDEX)
         incremental_pseudo()
 
-        parse_body(tab + 1, node.orelse)
+    row = "LABEL{0}".format(label_index + 1) + "\n"
+    file.write(row)
+    incremental_pseudo()
     
+    #Skip the label that used before
+    incremental_index()
+    return el_pseudo_index
+
+def parseFunctionDef(tab,node):
+    el_pseudo_index = []
+
+    row = generate_tab(tab)+"Define a function called " + node.name+ "\n"
+    file.write(row)
+    el_pseudo_index.append(PSEUDO_INDEX)
+    incremental_pseudo()
+
+    if node.args.args != []:   
+        plural = True if len(node.args.args) >= 2 else False
+        if plural:
+            args = " ".join([str(arg.arg) for arg in node.args.args])
+            row = generate_tab(tab) + "input args:" + args + "\n"
+            file.write(row)
+            el_pseudo_index.append(PSEUDO_INDEX)
+            incremental_pseudo()
+        else:
+            row = generate_tab(tab) + "input arg:" + str(node.args.args[0].arg) + "\n"
+            file.write(row)
+            el_pseudo_index.append(PSEUDO_INDEX)
+            incremental_pseudo()
+
+    parse_body(tab+1,node.body)
+
+
+    return el_pseudo_index
+
+def parseCallFunc(tab,node):
+    el_pseudo_index = []
+
+    if node.args:
+        #The node.args is not null
+        args = []
+        for arg in node.args:
+            if isinstance(arg,ast.Name):
+                args.append(str(arg.id))
+            elif isinstance(arg,ast.Constant):
+                args.append(str(node.value))
+            elif isinstance(arg,ast.BinOp):
+                args.append("EXPR")
+        
+        args = " ".join([str(arg) for arg in args])
+
+    return el_pseudo_index
+
+def parseReturn(tab,node):
+    el_pseudo_index = []
+    if isinstance(node.value,ast.Name):
+        row = generate_tab(tab) + "Return variable " + str(node.value.id) + "\n"
+        file.write(row)
+        el_pseudo_index.append(PSEUDO_INDEX)
+        incremental_pseudo()
+    elif isinstance(node.value,ast.BinOp):
+        start_point = PSEUDO_INDEX
+        result = str(parseAssign(tab,node.value))
+        row = generate_tab(tab) + "Return " + result + "\n"
+        file.write(row)
+        incremental_pseudo()
+
+        for i in range(start_point,PSEUDO_INDEX):
+            el_pseudo_index.append(i)
+
     return el_pseudo_index
 
 def parse_body(tab,body):
     for node in body :
 
         incremental_py()
-
         el = {"py_index":PY_INDEX,"pseudo_index":[]}
 
         if isinstance(node,ast.Assign):
@@ -254,21 +385,24 @@ def parse_body(tab,body):
             el["pseudo_index"] = parseWhileLoop(tab,node)
 
         elif isinstance(node,ast.FunctionDef):
-            el["type"] = FUNCTIONDEF
-            el["llc"] = ""
-            print("ast.FunctionDef")
-            print(node)
+            el["pseudo_index"] = parseFunctionDef(tab,node)
 
         elif isinstance(node,ast.Expr):
         #check value whether it is call function
             el["pseudo_index"] = parseExpr(tab,node)
 
         elif isinstance(node,ast.If):
+            incremental_index()
             el["pseudo_index"] = parseIfElse(tab,node)
+
+        elif isinstance(node,ast.Return):
+            el["pseudo_index"] = parseReturn(tab,node)
+
+        elif isinstance(node,ast.Call):
+            el["pseudo_index"] = parseCallFunc(tab,node)
 
         map_2_low_level_code.append(el)
         
-
         #elif isinstance(node,ast.Switch):
         #Python not like to provide switch function
  
@@ -292,22 +426,15 @@ def parse_pseudo_code(filename):
 
     #Add a function to run the code to check whether there are any problems
 
-    #These variables are for the llc_parse_tree
-    global ASSIGN,FOR,WHILE,FUNCTIONDEF,EXPR,IFELSE
-    ASSIGN = "assign"
-    FOR = "for"
-    WHILE = "while"
-    FUNCTIONDEF = "functiondef"
-    EXPR = "expression"
-    IFELSE = "ifelse"
-
+    #Open the file
     global file
     file = open("pseudo_code.txt", 'w')
 
     #Record the index for mapping
-    global PSEUDO_INDEX,PY_INDEX
+    global PSEUDO_INDEX,PY_INDEX,LABEL_INDEX
     PSEUDO_INDEX = 1
     PY_INDEX = -1
+    LABEL_INDEX = 0
     
 
     code = ""

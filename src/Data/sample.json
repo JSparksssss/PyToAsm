@@ -1,19 +1,34 @@
 {
     "samples":[{
         "type":"Statement",
-        "code":"b = 1\nprint(c)"
-    },{
-        "type":"Loop",
-        "code":"i = 0\nwhile i < 10:\n\tfor j in range(3):\n\t\tprint(j)\n\ti = i + 1"
-    },{
-        "type":"IfElse",
-        "code":"a = 1\nb = 1\nc = 1\nif a > 0:\n\tif b > 0:\n\t\tprint('ab')\n\t\tif c > 0:\n\t\t\tcgz()\n\t\telse:\n\t\t\tclez()\n\tprint('abc')\nelse:\n\talez()\nend_of_ifs()"
-    },{
-        "type":"FunctionDef",
-        "code":""
+        "code":"b = 1\na = 1\nb = a * 2 / b\nprint(b)",
+        "maps2flowchart":[
+            {
+                "rowId":0,
+                "tab":0,
+                "code":"b = 1",
+                "highlight":["id8"]
+            },
+            {
+                "rowId":1,
+                "tab":0,
+                "code":"print(c)",
+                "highlight":["sub10"]
+            }
+        ]
+        
     },{
         "type":"WhileLoop",
-        "code":""
+        "code":"i = 0\ntotal = 0\nwhile i < 10:\n\ttotal = total + i\n\ti = i + 1"
+    },{
+        "type":"IfElse",
+        "code":"a = 1\nb = 1\nc = 1\nd = 1\nif a > 0:\n\tif b > 0:\n\t\tprint('ab')\n\t\tif c > 0:\n\t\t\tcgz()\n\t\telif d > 0:\n\t\t\tclez()\n\tprint('abc')\nelse:\n\talez()\nend_of_ifs()"
+    },{
+        "type":"FunctionDef",
+        "code":"def add(a,b):\n\treturn a + b\na = 1\nb = 2\nc = add(a,b)"
+    },{
+        "type":"ForLoop",
+        "code":"for i in range(10):\n\tfor j in range(i):\n\t\tprint(\"*\")\n\tprint(\"\\n\")"
     }]
 
 }

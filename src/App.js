@@ -46,7 +46,6 @@ class App extends Component {
   }
 
   renderHighlight = (pyIndex) =>{
-
     this.setState({markers:[]})
 
     //initialize the Highlight markers
@@ -67,6 +66,7 @@ class App extends Component {
         })
 
     }catch(e){
+      console.log(e)
       alert("This pseudo code is not match")
     }
     
@@ -78,7 +78,7 @@ class App extends Component {
 
   onsourceCodeChange = (newValue) =>{
     if(this.state.pseudoCodeStatus === true){
-      this.setState({pseudoCodeStatus:false})
+      this.setState({pseudoCodeStatus:false,markers:[]})
     }
     // console.log(newValue)
     this.setState({
@@ -93,15 +93,36 @@ class App extends Component {
       this.renderHighlight(pyTargetCode)
     }
   }
-
+  whitenOriginCode = (code) =>{
+    var codeArr = code.split("\n");
+    var whitenArr = [];
+    var blankIndex = [];
+    var whitenCode = "";
+    for (var i = 0; i < codeArr.length; i++){
+      let whitenTab = codeArr[i].replaceAll("    ","");
+      if (whitenTab == ""){
+        blankIndex.push(i);
+      }
+    }
+    for (var i = 0; i < codeArr.length; i++){
+      if(blankIndex.indexOf(i) === -1){
+        whitenArr.push(codeArr[i]);
+      }
+    }
+    whitenCode = whitenArr.join("\n")
+    return whitenCode
+  }
   convertCode = () =>{
     console.log("Origin-code:",this.state.originCode);
     let transformText = this.state.originCode.replaceAll("\n","(enter)").replaceAll("\t","(tab)").replaceAll("+","(add)");
-    console.log("Transform Text is:", transformText)
+    console.log(transformText)
+    //Whiten the code for displaying
+    let whitenCode = this.whitenOriginCode(this.state.originCode)
     //Convert Code 
     fetch("/dis?code=" + transformText).then(res => res.json()).then(data =>{
       this.setState({
         markers:[],
+        originCode:whitenCode,
         pseudoCodeStatus:true,
         pseudoCode:data.code,
         py2llcmap:data.map
@@ -127,6 +148,8 @@ class App extends Component {
   insertSampleCode = (e) =>{
     var sampleCode = this.samples[e.target.id]
     this.setState({
+      pseudoCodeStatus:false,
+      pseudoCode:"",
       originCode:sampleCode.code
     })
   }
