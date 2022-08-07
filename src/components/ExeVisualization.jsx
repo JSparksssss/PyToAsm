@@ -7,12 +7,46 @@ class ExeVisualization extends Component{
         super(props);
         this.sourceCodeArray = this.props.sourceCode.split("\n");
         this.fcCode = this.props.fcCode;
+        this.defArr = [];
+        this.conArr = [];
         this.state = {
-            exeIndex:0
+            fcCode:this.props.fcCode,
+            exeIndex:0,
+            defArr:[],
+            conArr:[]
         }
+
+        this.flowChartComponent = React.createRef()
+
+    }
+    renderFlowchartCode = () =>{
+        let arr = Array(this.fcCode.split("\n"))[0];
+
+        //Define the first "\n" in flowchart code. That is the gap between definition and connection
+        var gapIndex = arr.indexOf("");
+
+        this.defArr = arr.slice(0,gapIndex);
+        this.conArr = arr.slice(gapIndex,arr.length-1);
+
 
     }
 
+    renderActiveBlock = (index) =>{
+        this.renderFlowchartCode();
+
+        let blockIndex = index + 2; //Skip the st and input
+        
+        let retrieveDefArr = this.defArr;
+        retrieveDefArr[blockIndex] = retrieveDefArr[blockIndex] + "|target";
+        let concatFlowChartCodeArr = retrieveDefArr.concat(this.conArr)
+        let newFlowChartCode  = concatFlowChartCodeArr.join("\n")
+        this.setState({
+            fcCode:newFlowChartCode
+        },()=>{
+            this.flowChartComponent.current.handleCodeChange(this.state.fcCode)
+        })
+        
+    }
     generateCodeTable = () =>{
         var result = []
         for(var i = 0; i < this.sourceCodeArray.length; i++){
@@ -38,6 +72,15 @@ class ExeVisualization extends Component{
         })
     }
 
+    
+    onFocusCode = (e) =>{
+        //Get the target code from the original editor
+        var pyTargetCode = e.cursor.row
+        console.log(pyTargetCode)
+        this.renderActiveBlock(pyTargetCode)
+
+      }
+
     render(){
         return(<div className='container'>
             <div className='row'>  
@@ -51,7 +94,7 @@ class ExeVisualization extends Component{
                   $blockScrolling: true,
               }}
               setOptions={{
-                readOnly:true,
+                // readOnly:true,
                 wrapBehavioursEnabled:true
               }}
               value={this.props.sourceCode}
@@ -63,7 +106,8 @@ class ExeVisualization extends Component{
                 </div>
                 <div id="canvas" className='bg-light col'>
                     <Flowdemo
-                        code={this.fcCode}
+                        ref = {this.flowChartComponent}
+                        code={this.state.fcCode}
                     /></div>
                 </div>
                 <footer className='bg-dark' style={{"height":"8em"}}>

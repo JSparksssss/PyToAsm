@@ -15,7 +15,7 @@ export class Flowdemo extends Component {
       "font-color": "black",
       "line-color": "black",
       "element-color": "black",
-      fill: "white",
+      fill:"white",
       "yes-text": "yes",
       "no-text": "no",
       "arrow-end": "block",
@@ -33,9 +33,7 @@ export class Flowdemo extends Component {
         }
       },
       flowstate: {
-        department1: { fill: "pink" },
-        department2: { fill: "yellow" },
-        external: { fill: "green" }
+        target: { fill: "yellow" }
       }
     };
 
@@ -46,9 +44,11 @@ export class Flowdemo extends Component {
     };
   }
 
-  handleCodeChange(e) {
+  handleCodeChange(newCode) {
     this.setState({
-      code: e.target.value
+      code: newCode
+    },()=>{
+      console.log(this.state.code);
     });
   }
 
