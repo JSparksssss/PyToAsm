@@ -8,8 +8,8 @@ license that can be found in the LICENSE file.
 import _ast
 import ast
 
-from pyflowchart.ast_node import parse
-from pyflowchart.node import Node, NodesGroup
+from ast_node import parse
+from node import Node, NodesGroup
 
 
 class Flowchart(NodesGroup):
@@ -36,6 +36,7 @@ class Flowchart(NodesGroup):
         Returns:
             a flowchart.js DSL string including node definitions & connections
         """
+        
         return self.fc_definition() + '\n' + self.fc_connection()
 
     @staticmethod

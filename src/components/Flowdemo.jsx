@@ -48,7 +48,7 @@ export class Flowdemo extends Component {
     this.setState({
       code: newCode
     },()=>{
-      console.log(this.state.code);
+      // console.log(this.state.code);
     });
   }
 

@@ -10,8 +10,7 @@ import argparse
 
 import chardet
 
-from pyflowchart.flowchart import Flowchart
-
+from flowchart import Flowchart
 
 def detect_decode(file_content: bytes) -> str:
     """detect_decode detect the encoding of file_content,

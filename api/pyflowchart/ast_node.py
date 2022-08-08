@@ -12,7 +12,7 @@ from typing import List, Tuple
 
 import astunparse
 
-from pyflowchart.node import *
+from node import *
 
 
 # TODO: beautify tail connection direction
@@ -147,7 +147,7 @@ class FunctionDef(NodesGroup, AstNode):
             self.func_start.connect(self.func_args_input)
             self.func_args_input.connect(self.body_head)
             
-        print("Change detect")
+
         for t in self.body_tails:
             if isinstance(t, Node):
                 t.connect(self.func_end)
@@ -369,7 +369,6 @@ class If(NodesGroup, AstNode):
 
         self.parse_if_body(**kwargs)
         self.parse_else_body(**kwargs)
-
         if kwargs.get("simplify", True):
             self.simplify()
         if kwargs.get("conds_align", False) and self.cond_node.is_no_else():
@@ -665,7 +664,7 @@ def parse(ast_list: List[_ast.AST], **kwargs) -> ParseProcessGraph:
         assert issubclass(ast_node_class, AstNode)
 
         node = ast_node_class(ast_object, **kwargs)
-        
+
         if head_node is None:  # is the first node
             head_node = node
             tail_node = node

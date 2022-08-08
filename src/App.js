@@ -14,6 +14,7 @@ import Footer from './components/Footer';
 
 import Sample from "./Data/sample.json"
 import ExeVisualization from './components/ExeVisualization';
+import { parse } from '@fortawesome/fontawesome-svg-core';
 
 function findLLC(pyIndex,body){
   for(var i = 0; i < body.length; i++){
@@ -112,6 +113,7 @@ class App extends Component {
     whitenCode = whitenArr.join("\n")
     return whitenCode
   }
+
   convertCode = () =>{
     console.log("Origin-code:",this.state.originCode);
     let transformText = this.state.originCode.replaceAll("\n","(enter)").replaceAll("\t","(tab)").replaceAll("+","(add)");
@@ -130,6 +132,41 @@ class App extends Component {
     });
   }
 
+  sequenceFlowChart = (code) =>{
+    let arr = code.split("\n");
+
+    //Define the first "\n" in flowchart code. That is the gap between definition and connection
+    let gapIndex = arr.indexOf("");
+
+    let defArr = arr.slice(0,gapIndex);
+    let conArr = arr.slice(gapIndex,arr.length);
+
+    let defDict = []
+
+    for (let i = 0; i < defArr.length; i++){
+      let id = defArr[i].split("=>")[0]
+      let content = defArr[i].split("=>")[1]
+      let el = {"id":id,"content":content}
+      defDict.push(el)
+    }
+
+    for (let i = 0; i < defDict.length - 1; i++){
+      for (let j = i; j < defDict.length - 1; j++){
+        if(parseInt(defDict[j]["id"].replace(/[^0-9]/ig,'')) > parseInt(defDict[j+1]["id"].replace(/[^0-9]/ig,''))){
+          let temp = defDict[j]
+          defDict[j] = defDict[j+1]
+          defDict[j+1] = temp
+        }
+      }
+    }
+    
+    for (let i = 0; i < defDict.length; i++){
+      let el = defDict[i]["id"]+"=>"+defDict[i]["content"]
+      defArr[i] = el
+    }
+    let result = defArr.concat(conArr)
+    return result.join("\n")
+  }
   justifyExecution = () =>{
 
     console.log("Origin-code:",this.state.originCode);
@@ -138,8 +175,9 @@ class App extends Component {
     //Convert Code 
     fetch("/flowchart-sample?code=" + transformText).then(res => res.json()).then(data =>{
       console.log(data.code);
+      let result = this.sequenceFlowChart(data.code);
       if(data.code){
-        this.setState({ flowChartCode:data.code, visualizeExecutionStatus:true})
+        this.setState({ flowChartCode:result, visualizeExecutionStatus:true})
       }
       
     });

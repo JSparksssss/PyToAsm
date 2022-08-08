@@ -9,32 +9,48 @@ class ExeVisualization extends Component{
         this.fcCode = this.props.fcCode;
         this.defArr = [];
         this.conArr = [];
+        this.elseArr = this.renderElseArr(this.props.sourceCode);
         this.state = {
             fcCode:this.props.fcCode,
             exeIndex:0,
             defArr:[],
-            conArr:[]
+            conArr:[],
+            elseArr:[]
+            
         }
-
         this.flowChartComponent = React.createRef()
 
     }
+    renderElseArr = (code) =>{
+        let elseArr = []
+        console.log(code);
+        let arr = code.split("\n");
+        for(var i = 0; i < arr.length; i++){
+            if(arr[i].replace(/\s*/g,"") == "else:"){
+                elseArr.push(i);
+                console.log(i);
+            }
+                
+        }
+        return elseArr
+    }
+
     renderFlowchartCode = () =>{
-        let arr = Array(this.fcCode.split("\n"))[0];
+        let arr = this.fcCode.split("\n");
 
         //Define the first "\n" in flowchart code. That is the gap between definition and connection
         var gapIndex = arr.indexOf("");
 
         this.defArr = arr.slice(0,gapIndex);
         this.conArr = arr.slice(gapIndex,arr.length-1);
-
+        
 
     }
 
     renderActiveBlock = (index) =>{
         this.renderFlowchartCode();
 
-        let blockIndex = index + 2; //Skip the st and input
+        let blockIndex = index+1; //Skip the st
         
         let retrieveDefArr = this.defArr;
         retrieveDefArr[blockIndex] = retrieveDefArr[blockIndex] + "|target";
@@ -47,6 +63,7 @@ class ExeVisualization extends Component{
         })
         
     }
+
     generateCodeTable = () =>{
         var result = []
         for(var i = 0; i < this.sourceCodeArray.length; i++){
@@ -75,11 +92,21 @@ class ExeVisualization extends Component{
     
     onFocusCode = (e) =>{
         //Get the target code from the original editor
-        var pyTargetCode = e.cursor.row
-        console.log(pyTargetCode)
-        this.renderActiveBlock(pyTargetCode)
+        let pyTargetCode = e.cursor.row
+        let blockIndex = pyTargetCode
+        for(let i = 0; i < this.elseArr.length; i++){
+            if(pyTargetCode > this.elseArr[i]){
+                blockIndex = blockIndex - 1
+            }
+            else if (pyTargetCode == this.elseArr[i]){
+                alert("There is not a related block in flowchart.")
+            }
+        }
 
-      }
+        this.renderActiveBlock(blockIndex);
+        
+
+    }
 
     render(){
         return(<div className='container'>
