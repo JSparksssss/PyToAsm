@@ -42,10 +42,11 @@ def loop_cond_expr(node):
 def iter_args(iter,goto):
     if isinstance(iter,ast.Call):
         if(iter.func.id == "range"):
+            print(iter.args[0])
             if isinstance(iter.args[0],ast.Constant):
                 cond = "if variable is out of range(" + str(iter.args[0].value) + ")"+" then goto " + goto
-            # elif object_class_name == 'Name':
-            #     cond = "if variable is out of range(" + str(iter.args[0].id) + ")"+" then goto " + goto
+            elif isinstance(iter.args[0],ast.Name):
+                cond = "if variable is out of range(" + str(iter.args[0].id) + ")"+" then goto " + goto
             return cond
     return True
 

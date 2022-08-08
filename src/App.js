@@ -36,6 +36,7 @@ class App extends Component {
       pseudoCodeStatus:false,
       flowChartCodeStatus:false,
       visualizeExecutionStatus:false,
+      modalStatus:false,
       markers:[],
       py2llcmap:null
     };
@@ -167,6 +168,7 @@ class App extends Component {
     let result = defArr.concat(conArr)
     return result.join("\n")
   }
+
   justifyExecution = () =>{
 
     console.log("Origin-code:",this.state.originCode);
@@ -200,7 +202,9 @@ class App extends Component {
   render(){
     return(
       <div className="App bg-dark">
-        <Header/>
+        <Header
+        showTutorial = {()=>this.showTutorial()}
+        />
         {this.state.visualizeExecutionStatus? <ExeVisualization 
           editCode={this.backToEditPage}
           sourceCode = {this.state.originCode} 
@@ -253,7 +257,7 @@ class App extends Component {
                 </div>
           </div>
         </div>)}
-        <Footer/>  
+        <Footer/>
       </div>
     )
   }
