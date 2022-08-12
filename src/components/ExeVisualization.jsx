@@ -21,6 +21,8 @@ class ExeVisualization extends Component{
         this.flowChartComponent = React.createRef()
 
     }
+
+    //There are not blocks for else:, we should list all else: indexes for skipping them.
     renderElseArr = (code) =>{
         let elseArr = []
         console.log(code);
@@ -34,7 +36,7 @@ class ExeVisualization extends Component{
         }
         return elseArr
     }
-
+    
     renderFlowchartCode = () =>{
         let arr = this.fcCode.split("\n");
 
@@ -94,6 +96,8 @@ class ExeVisualization extends Component{
         //Get the target code from the original editor
         let pyTargetCode = e.cursor.row
         let blockIndex = pyTargetCode
+
+        //Skip all else: 
         for(let i = 0; i < this.elseArr.length; i++){
             if(pyTargetCode > this.elseArr[i]){
                 blockIndex = blockIndex - 1
@@ -113,7 +117,6 @@ class ExeVisualization extends Component{
             <div className='row'>  
             <AceEditor
               className="col"
-              mode="python"
               theme="github"
               onCursorChange = {(e)=>this.onFocusCode(e)}
               name="PYTHON_CODE"

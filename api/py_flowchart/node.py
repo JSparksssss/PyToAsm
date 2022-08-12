@@ -262,7 +262,6 @@ class NodesGroup(Node):
         """
         pass
 
-
 # flowchart.js flowchart DSL Nodes
 # https://github.com/adrai/flowchart.js#node-syntax
 

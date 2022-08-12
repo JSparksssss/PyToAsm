@@ -231,7 +231,7 @@ class App extends Component {
             <div className='col-4'>
               <button type="button" className="btn btn-warning m-4 pta-btn-text" id="convert-code" onClick={()=>this.convertCode()} style={{minWidth:"200px"}}>Convert to Pseudo-code</button>
               {/* <button type="button" className="btn btn-warning m-4 pta-btn-text" id="convert-fc" onClick={()=>this.convertFlowChart()}style={{minWidth:"200px"}}>Convert to Flowchart</button> */}
-              <button type="button" className="btn btn-warning m-4 pta-btn-text" id="execution" onClick={()=>this.justifyExecution()}style={{minWidth:"200px"}}>Visualization Execution</button>
+              <button type="button" className="btn btn-warning m-4 pta-btn-text" id="execution" onClick={()=>this.justifyExecution()}style={{minWidth:"200px"}}>Convert to Flowchart</button>
             </div>
             <AceEditor
                       className='col'

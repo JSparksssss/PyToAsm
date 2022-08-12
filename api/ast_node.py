@@ -174,6 +174,10 @@ def parseForLoop(tab,node):
     #
     #
 
+    row = generate_tab(tab + 1) + "Iterate the next element"+"\n"
+    file.write(row)
+    el_pseudo_index.append(PSEUDO_INDEX)
+    incremental_pseudo()
 
     row = generate_tab(tab + 1) + "goto " + for_label + "\n"
     file.write(row)
@@ -182,7 +186,7 @@ def parseForLoop(tab,node):
 
     row = "LABEL{0}".format(label_index+1) + "\n"
     file.write(row)
-    el_pseudo_index.append(PSEUDO_INDEX)
+    # el_pseudo_index.append(PSEUDO_INDEX)
     incremental_pseudo()
     incremental_index()
 
@@ -252,9 +256,9 @@ def parseExpr(tab,node):
             incremental_pseudo()
         else:
             if(hasattr(node.value.args[0],"id")):
-                row = generate_tab(tab)+ "input arg:" + node.value.args[0].id + "\n"
+                row = generate_tab(tab)+ "input arg:" + str(node.value.args[0].id) + "\n"
             elif(hasattr(node.value.args[0],"value")):
-                row = generate_tab(tab)+ "input arg:" + node.value.args[0].value + "\n"
+                row = generate_tab(tab)+ "input arg:" + str(node.value.args[0].value) + "\n"
             file.write(row)
             el_pseudo_index.append(PSEUDO_INDEX)
             incremental_pseudo()

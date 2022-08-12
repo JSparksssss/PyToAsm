@@ -105,13 +105,10 @@ def fc_sample():
 
 	source_py = "source_code.py"
 
-	os.system("python3 pyflowchart/__main__.py {0} --no-simplify > flowchart.txt".format(source_py))
-	print("system out",sys.stdout)
+	os.system("python3 py_flowchart/main.py {0} > flowchart.txt".format(source_py))
 
 	with open('flowchart.txt') as file:
 		fc_code = file.read()
-	
-	print(fc_code)
 
 	return jsonify(code=str(fc_code))
 	
