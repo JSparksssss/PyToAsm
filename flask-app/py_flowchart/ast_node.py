@@ -118,19 +118,12 @@ class FunctionDef(NodesGroup, AstNode):
 class LoopCondition(AstConditionNode):
     
     #For the condition in loop
-    def connect(self, sub_node, direction='') -> None:
+    def connect(self, sub_node, direction=''):
         if direction:
             self.set_connect_direction(direction)
         self.connect_no(sub_node)
 
-    def is_one_line_body(self) -> bool:
-        """
-        Is condition with one line body:
-            for|while expr:
-                one_line_body
-        Returns:
-            True or False
-        """
+    def is_one_line_body(self):
         one_line_body = False
         try:
             loop_body = self.connection_yes
@@ -146,25 +139,13 @@ class LoopCondition(AstConditionNode):
 
 
 class Loop(NodesGroup, AstNode):
-    """
-    Loop is a AstNode for _ast.For | _ast.While ({for|while}-sentence in python source code)
+    #This is the for WhileLoop and ForLoop 
+    def __init__(self, ast_loop, **kwargs):
+        
+        # Construct Loop object will make following Node chain:
+        #     Loop -> LoopCondition -> (yes) -> LoopCondition
+        #                           -> (no)  -> <next_node>
 
-    This class is a NodesGroup that connects to LoopCondition & loop-body.
-    """
-
-    def __init__(self, ast_loop: _ast.stmt, **kwargs):  # _ast.For | _ast.While
-        """
-        Construct Loop object will make following Node chain:
-            Loop -> LoopCondition -> (yes) -> LoopCondition
-                                  -> (no)  -> <next_node>
-
-        Args:
-            **kwargs:
-
-                simplify={True | False}: simplify the one_line_body case?
-                                           (Default: True)
-                                           See self.simplify
-        """
         AstNode.__init__(self, ast_loop, **kwargs)
 
         self.cond_node = LoopCondition(ast_loop)
@@ -175,15 +156,14 @@ class Loop(NodesGroup, AstNode):
 
         self._virtual_no_tail()
 
-        if kwargs.get("simplify", True):
-            self.simplify()
 
-    def parse_loop_body(self, **kwargs) -> None:
+    def parse_loop_body(self, **kwargs):
         """
         Parse and Connect loop-body (a node graph) to self.cond_node (LoopCondition), extend self.tails with tails got.
         """
         progress = parse(self.ast_object.body, **kwargs)
 
+        #If loop body has content
         if progress.head is not None:
             process = parse(self.ast_object.body, **kwargs)
             # head
@@ -199,43 +179,16 @@ class Loop(NodesGroup, AstNode):
             noop.connect(self.cond_node)
             self.cond_node.connection_yes(noop)
 
-    def _virtual_no_tail(self) -> None:
+    def _virtual_no_tail(self):
+
+        #Create a tail for this loop
+        #Connect the tail with the next node in parse()
         virtual_no = CondYN(self, CondYN.NO)
 
         self.cond_node.connection_no = virtual_no
         self.cond_node.connections.append(virtual_no)
 
         self.append_tails(virtual_no)
-
-    # def connect(self, sub_node) -> None:
-    #     self.cond_node.connect_no(sub_node)
-
-    def simplify(self) -> None:
-        """
-        simplify following case:
-            for|while expr:
-                one_line_body
-        before:
-            ... -> Loop (self, NodesGroup) -> LoopCondition('for|while expr') -> CommonOperation('one_line_body') -> ...
-        after:
-            ... -> Loop (self, NodesGroup) -> CommonOperation('one_line_body while expr') -> ...
-        Returns:
-            None
-        """
-        try:
-            if self.cond_node.is_one_line_body():  # simplify
-                cond = self.cond_node
-                body = self.cond_node.connection_yes.sub
-
-                simplified = OperationNode(f'{body.node_text} while {cond.node_text.lstrip("for").lstrip("while")}')
-
-                simplified.node_name = self.head.node_name
-                self.head = simplified
-                self.tails = [simplified]
-
-        except AttributeError as e:
-            print(e)
-
 
 ##
 # If
@@ -283,8 +236,6 @@ class If(NodesGroup, AstNode):
         self.parse_if_body(**kwargs)
         self.parse_else_body(**kwargs)
         
-        if kwargs.get("conds_align", False) and self.cond_node.is_no_else():
-            self.cond_node.connection_yes.set_connect_direction("right")
 
     def parse_if_body(self, **kwargs):
 
@@ -292,7 +243,10 @@ class If(NodesGroup, AstNode):
 
         if nodes.head is not None:
             self.cond_node.connect_yes(nodes.head)
-            self.extend_tails(nodes.tails)
+
+            #node.tails is a list
+            for tail in nodes.tails:
+                self.append_tails(tail)
         else: 
             virtual_yes = CondYN(self, CondYN.YES)
             self.cond_node.connection_yes = virtual_yes
@@ -306,7 +260,8 @@ class If(NodesGroup, AstNode):
 
         if nodes.head is not None:
             self.cond_node.connect_no(nodes.head)
-            self.extend_tails(nodes.tails)
+            for tail in nodes.tails:
+                self.append_tails(tail)
         else:
             virtual_no = CondYN(self, CondYN.NO)
             self.cond_node.connection_no = virtual_no
@@ -316,22 +271,6 @@ class If(NodesGroup, AstNode):
 
 
     def align(self):
-        """ConditionNode alignment support #14
-            if cond1:
-                op1
-            if cond2:
-                op2
-            if cond3:
-                op3
-            op_end
-
-        Simplify: add param `align-next=no` to cond1~3, which improves the generated flowchart.
-
-        See:
-            - https://github.com/cdfmlr/pyflowchart/issues/14
-            - https://github.com/adrai/flowchart.js/issues/221#issuecomment-846919013
-            - https://github.com/adrai/flowchart.js/issues/115
-        """
         self.cond_node.no_align_next()
 
 
@@ -367,10 +306,8 @@ class ReturnOutput(AstNode, InputOutputNode):
 
 
 class ReturnEnd(AstNode, EndNode):
-    """
-    ReturnEnd is a EndNode for _ast.Return (return sentence in python source code)
-    """
-
+    
+    #This is a endnode for a function with return
     def __init__(self, ast_return: _ast.Return, **kwargs):
         AstNode.__init__(self, ast_return, **kwargs)
         EndNode.__init__(self, "function") 
@@ -379,14 +316,11 @@ class ReturnEnd(AstNode, EndNode):
 class Return(NodesGroup, AstNode):
 
     def __init__(self, ast_return: _ast.Return, **kwargs):
-        """
-        Construct Return object will make following Node chain:
-            Return -> ReturnOutput -> ReturnEnd
-        Giving return sentence without return-values, the ReturnOutput will be omitted: (Return -> ReturnEnd)
 
-        Args:
-            **kwargs: None
-        """
+        # Construct Return object will make following Node chain:
+        #     Return -> ReturnOutput -> ReturnEnd
+        # Giving return sentence without return-values, the ReturnOutput will be omitted: (Return -> ReturnEnd)
+
         AstNode.__init__(self, ast_return, **kwargs)
 
         self.output_node = None
@@ -405,18 +339,6 @@ class Return(NodesGroup, AstNode):
 
         NodesGroup.__init__(self, self.head, [self.end_node])
 
-    # def fc_definition(self) -> str:
-    #     """
-    #     Return object is invisible
-    #     """
-    #     return NodesGroup.fc_definition(self)
-    #
-    # def fc_connection(self) -> str:
-    #     """
-    #     Return object is invisible
-    #     """
-    #     return NodesGroup.fc_connection(self)
-    #
     def connect(self, sub_node, direction=''):
         """
         Return should not be connected with anything
@@ -476,10 +398,8 @@ def parse(ast_list: List[_ast.AST], **kwargs):
             head_node = node
             tail_node = node
         else:
-            tail_node.connect(node)
+            tail_node.connect(node) 
 
-            # ConditionNode alignment support (Issue#14)
-            # XXX: It's ugly to handle it here. But I have no idea, for this moment, to make it ELEGANT.
             if isinstance(tail_node, If) and isinstance(node, If) and \
                     kwargs.get("conds_align", False):
                 tail_node.align()

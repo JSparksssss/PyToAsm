@@ -117,6 +117,7 @@ class ExeVisualization extends Component{
             <div className='row'>  
             <AceEditor
               className="col"
+              mode="python"
               theme="github"
               onCursorChange = {(e)=>this.onFocusCode(e)}
               name="PYTHON_CODE"

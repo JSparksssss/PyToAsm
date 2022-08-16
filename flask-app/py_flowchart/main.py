@@ -25,6 +25,5 @@ if __name__ == '__main__':
     parser.add_argument('code_file', type=argparse.FileType('rb'))
     
     args = parser.parse_args()
-
     
     main(args.code_file)

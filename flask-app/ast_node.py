@@ -1,6 +1,8 @@
 import ast
+from dataclasses import astuple
 from pprint import pprint
 from tokenize import Name
+from xml.dom.minidom import Attr
 
 import astunparse
 
@@ -22,33 +24,26 @@ def generate_tab(number):
         tab_list.append("   ")
     return "".join(tab_list)
 
-def while_cond_args(test,goto):
-    if isinstance(test,ast.Compare):
-        #The condition has one left node
-        if(isinstance(test.left,ast.Name)):
-            cond = "if variable "+ test.left.id +" "+ cmp_label(test.ops[0]) + " " + str(test.comparators[0].value) + " then goto " + goto
-            return cond
-    return True
-
 def loop_cond_expr(node):
     source = astunparse.unparse(node)
-    loop_statement = source.strip()
-    lines = loop_statement.splitlines()
+    statement = source.strip()
+    lines = statement.splitlines()
     if len(lines) >= 1:
-        return lines[0]
+        return lines[0].rstrip(":")
     else:
         return True
 
-def iter_args(iter,goto):
-    if isinstance(iter,ast.Call):
-        if(iter.func.id == "range"):
-            print(iter.args[0])
-            if isinstance(iter.args[0],ast.Constant):
-                cond = "if variable is out of range(" + str(iter.args[0].value) + ")"+" then goto " + goto
-            elif isinstance(iter.args[0],ast.Name):
-                cond = "if variable is out of range(" + str(iter.args[0].id) + ")"+" then goto " + goto
-            return cond
-    return True
+def while_cond_args(node,label):
+    cond = loop_cond_expr(node)
+    cond = cond.split("while")[1]
+    row = "if "+ cond + " is satisfied, run the code below. Otherwise, go to "+ label 
+    return row
+
+def for_cond_args(node,label):
+    cond = loop_cond_expr(node)
+    cond = cond.split("for")[1]
+    row = "if" + cond + " is satisfied, run the code below. Otherwise, go to "+ label 
+    return row
 
 #parse the operation
 def operation_label(node):
@@ -80,21 +75,38 @@ def assign_id_or_value(node):
     elif isinstance(node,ast.Name):
         return node.id
 
+def cond_expr(node):    
+        source = astunparse.unparse(node)
+        loop_statement = source.strip()
+        lines = loop_statement.splitlines()
+        if len(lines) >= 1:
+            return lines[0].rstrip(':')
+        else:
+            return 'True'
+
+def parseIfCondition(tab,node,label):
+    row = generate_tab(tab) + cond_expr(node) + " run the code below. If not satified, then go to " + label + "\n"
+    return row
+
 def parseAssign(tab,node):
     if isinstance(node,ast.BinOp) :
-        left_node_is_null = isinstance(node.left,ast.Name)or isinstance(node.left,ast.Constant)
-        right_node_is_null = isinstance(node.right,ast.Name)or isinstance(node.right,ast.Constant)
-        if left_node_is_null and right_node_is_null:     
-            row = generate_tab(tab)+ast.unparse(node) + "\n"
+        #If left_node is not null, left_node will be _ast.BinOp
+        left_node_is_null = isinstance(node.left,ast.Name) or isinstance(node.left,ast.Constant) or isinstance(node.left,ast.Num)
+        right_node_is_null = isinstance(node.right,ast.Name) or isinstance(node.right,ast.Constant) or isinstance(node.right,ast.Num)
+        if left_node_is_null and right_node_is_null:   
+            result = astunparse.unparse(node).strip().splitlines()[0]
+            row = generate_tab(tab) + result + "\n"
+            print(row)
             file.write(row)
             incremental_pseudo()
-            return "("+ ast.unparse(node)+ ")"
+            return result
 
         elif left_node_is_null == False and right_node_is_null == False:
+
             left_node =str(parseAssign(tab,node.left))
             right_node = str(parseAssign(tab,node.right))
             result = left_node + " "+ operation_label(node.op) + " "+ right_node 
-            row = generate_tab(tab)+result + "\n"
+            row = generate_tab(tab)+ result + "\n"
             file.write(row)
             incremental_pseudo()
             return result
@@ -121,7 +133,11 @@ def parseAssign(tab,node):
         return node.id
     elif isinstance(node,ast.Constant):
         return node.value
+    elif isinstance(node,ast.Num):
+        return node.n
 
+#_ast.Assign 
+#Consider the value is _ast.Call or _ast.BinOp
 def parseAssignWrapper(tab,node):
     el_pseudo_index = []
     start_point = PSEUDO_INDEX
@@ -129,7 +145,7 @@ def parseAssignWrapper(tab,node):
         print(node)
         el_pseudo_index = parseExpr(tab,node)
         incremental_pseudo()
-        row = "The result above will be assigned to "+node.targets[0].id
+        row = "The result above will be assigned to " + node.targets[0].id
         file.write(row)
         el_pseudo_index.append(PSEUDO_INDEX)
         incremental_pseudo()
@@ -144,7 +160,8 @@ def parseAssignWrapper(tab,node):
         el_pseudo_index.append(i)
     
     return el_pseudo_index
-    
+
+#_ast.For   
 def parseForLoop(tab,node):
     el_pseudo_index = []
     label_index = LABEL_INDEX
@@ -158,7 +175,7 @@ def parseForLoop(tab,node):
 
     #The args
     if node.iter:
-        cond = iter_args(node.iter,"LABEL{0}".format(label_index + 1))
+        cond = for_cond_args(node,"LABEL{0}".format(label_index + 1))
         row = generate_tab(tab) + cond + "\n"
         file.write(row)
         el_pseudo_index.append(PSEUDO_INDEX)
@@ -192,7 +209,7 @@ def parseForLoop(tab,node):
 
     return el_pseudo_index
 
-##add try catch
+#_ast.While
 def parseWhileLoop(tab,node):
     el_pseudo_index = []
     label_index = LABEL_INDEX
@@ -204,9 +221,9 @@ def parseWhileLoop(tab,node):
     incremental_pseudo()
 
     #The args
-    if node.test:
-        cond = while_cond_args(node.test,"LABEL{0}".format(label_index + 1))
-        row = generate_tab(tab)+cond + "\n"
+    if isinstance(node.test,ast.Compare):
+        cond = while_cond_args(node,"LABEL{0}".format(label_index + 1))
+        row = generate_tab(tab)+ cond + "\n"
         file.write(row)
         el_pseudo_index.append(PSEUDO_INDEX)
         incremental_pseudo()
@@ -229,6 +246,7 @@ def parseWhileLoop(tab,node):
 
     return el_pseudo_index
 
+#_ast.Expr
 def parseExpr(tab,node):
     el_pseudo_index = []
     if node.value and isinstance(node.value,ast.Call):
@@ -248,6 +266,8 @@ def parseExpr(tab,node):
                     args.append(arg.value)
                 elif isinstance(arg,ast.Name):
                     args.append(arg.id)
+                elif isinstance(arg,ast.Str):
+                    args.append(args.s)
 
             args = " ".join([arg for arg in args])
             row = generate_tab(tab)+ "input args: " + args + "\n"
@@ -255,21 +275,24 @@ def parseExpr(tab,node):
             el_pseudo_index.append(PSEUDO_INDEX)
             incremental_pseudo()
         else:
-            if(hasattr(node.value.args[0],"id")):
+            if(hasattr(node.value.args[0],"id")): #_ast.Name
                 row = generate_tab(tab)+ "input arg:" + str(node.value.args[0].id) + "\n"
-            elif(hasattr(node.value.args[0],"value")):
+            elif(hasattr(node.value.args[0],"value")): #_ast.Constant
                 row = generate_tab(tab)+ "input arg:" + str(node.value.args[0].value) + "\n"
+            elif(hasattr(node.value.args[0],"s")): #_ast.String
+                row = generate_tab(tab)+ "input arg:" + str(node.value.args[0].s) + "\n"
             file.write(row)
             el_pseudo_index.append(PSEUDO_INDEX)
             incremental_pseudo()
     return el_pseudo_index
 
+#_ast.If
 def parseIfElse(tab,node):
     el_pseudo_index = []
     label_index = LABEL_INDEX
     if_else_label = "LABEL{0}".format(label_index)
     if isinstance(node.test, ast.Compare):
-        row = generate_tab(tab)+"If " + str(node.test.left.id) + " " + str(cmp_label(node.test.ops[0])) + " "+ str(node.test.comparators[0].value) + ", then goto " +if_else_label+ "\n"
+        row = parseIfCondition(tab,node,if_else_label)
     file.write(row)
     el_pseudo_index.append(PSEUDO_INDEX)
     incremental_pseudo()
@@ -309,6 +332,7 @@ def parseIfElse(tab,node):
     incremental_index()
     return el_pseudo_index
 
+#_ast.FunctionDef
 def parseFunctionDef(tab,node):
     el_pseudo_index = []
 
@@ -354,6 +378,7 @@ def parseCallFunc(tab,node):
 
     return el_pseudo_index
 
+#_ast.Return
 def parseReturn(tab,node):
     el_pseudo_index = []
     if isinstance(node.value,ast.Name):
@@ -373,6 +398,8 @@ def parseReturn(tab,node):
 
     return el_pseudo_index
 
+
+#Parse the node.body
 def parse_body(tab,body):
     for node in body :
 
@@ -380,7 +407,6 @@ def parse_body(tab,body):
         el = {"py_index":PY_INDEX,"pseudo_index":[]}
 
         if isinstance(node,ast.Assign):
-            print("Assign")
             el["pseudo_index"]=parseAssignWrapper(tab,node)
 
         elif isinstance(node,ast.For):
@@ -452,8 +478,13 @@ def parse_pseudo_code(filename):
     pprint(astTree) #Print tree
     # pprint(tree.body) #Print all child nodes
 
-    parse_ast_tree(1,tree)
+    try:
+        parse_ast_tree(1,tree)
+        file.close()
+    except NameError or AttributeError:
+        file.close()
+        return "404"
 
-    file.close()
+    
     return map_2_low_level_code
     

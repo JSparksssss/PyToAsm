@@ -1,0 +1,15 @@
+st3=>start: startModule
+cond9=>condition: for i in range(10)
+cond29=>condition: for j in range(i)
+sub36=>subroutine: print('*')
+sub40=>subroutine: print('Hello World.')
+e44=>end: end Module
+
+st3->cond9
+cond9(yes)->cond29
+cond29(yes)->sub36
+sub36(left)->cond29
+cond29(no)->sub40
+sub40(left)->cond9
+cond9(no)->e44
+

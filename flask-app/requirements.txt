@@ -1,0 +1,4 @@
+flask
+astunparse
+flask_cors
+python-dotenv

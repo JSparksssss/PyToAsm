@@ -13,10 +13,10 @@ class Footer extends Component{
                 <div className='text-center'>Inspired from <a href='https://pythontutor.com/'>PythonTutor</a>&<a href='https://godbolt.org/'>GodBolt</a></div>
           
                 <div className='text-center'>
-                    <a className="btn btn-outline-light btn-floating m-1 text-white text-right" role="button" href='https://github.com/JSparksssss'>
+                    <a className="btn btn-outline-light btn-floating m-1 text-white text-right" role="button" href='https://github.com/JSparksssss/PyToAsm/issues'>
                         <i className="fa-brands fa-github"></i>
                     </a>
-                    <span className='text-light'> @Jsparksssss</span>
+                    <span className='text-light'> @Report issues</span>
                 </div>
             </footer>
         )

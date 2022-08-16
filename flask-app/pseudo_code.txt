@@ -1,0 +1,16 @@
+Module Start
+LABEL0
+   if i in range(10) is satisfied, run the code below. Otherwise, go to LABEL1
+LABEL2
+      if j in range(i) is satisfied, run the code below. Otherwise, go to LABEL3
+         call function print
+         input arg:*
+         Iterate the next element
+         goto LABEL2
+LABEL3
+      call function print
+      input arg:Hello World.
+      Iterate the next element
+      goto LABEL0
+LABEL1
+Module Done

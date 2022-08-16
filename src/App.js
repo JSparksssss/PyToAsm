@@ -122,14 +122,20 @@ class App extends Component {
     //Whiten the code for displaying
     let whitenCode = this.whitenOriginCode(this.state.originCode)
     //Convert Code 
-    fetch("/dis?code=" + transformText).then(res => res.json()).then(data =>{
-      this.setState({
+    fetch("/llc?code=" + transformText).then(res => res.json()).then(data =>{
+      if(data.code == ""){
+        alert("Convert to pseudo code failed. Please modify the code.")
+      }
+      else{
+        this.setState({
         markers:[],
         originCode:whitenCode,
         pseudoCodeStatus:true,
         pseudoCode:data.code,
         py2llcmap:data.map
-      })   
+      })
+      }
+         
     });
   }
 
@@ -175,7 +181,7 @@ class App extends Component {
     let transformText = this.state.originCode.replaceAll("\n","(enter)").replaceAll("\t","(tab)").replaceAll("+","(add)");
     console.log("Transform Text is:", transformText)
     //Convert Code 
-    fetch("/flowchart-sample?code=" + transformText).then(res => res.json()).then(data =>{
+    fetch("/fc?code=" + transformText).then(res => res.json()).then(data =>{
       console.log(data.code);
       let result = this.sequenceFlowChart(data.code);
       if(data.code){

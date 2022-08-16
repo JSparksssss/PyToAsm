@@ -1,7 +1,6 @@
 """
-This file defines basic class Node, NodesGroup and
-a variety of node subclass, one-to-one correspondence
-with flowchart.js flowchart DSL Nodes (except parallel).
+This file manage to translate AST into our Nodes Graph,
+By defining AstNodes, and statements to parse AST.
 
 Copyright 2020 CDFMLR. All rights reserved.
 Use of this source code is governed by a MIT
@@ -12,26 +11,11 @@ import time
 import uuid
 import itertools  # for count
 
-
-# TODO(v1.0): Noticing that all connections look like `xxx(params)->yyy`,
-#       where params maybe something like `right`, `yes`, or `yes,right`,
-#       A good idea is to make a new class Connection as:
-#           class Connection(object):
-#               next_node: Node
-#               params: dict
-#       It helps to customize the directions of connections and we may not even
-#       need a CondYN anymore!
-#       But this changes a lot and seems not necessary now. So it's maybe a
-#       further version 1.0 job to achieve this.
-
 class Node(object):
-    """Node is a abstract class for kinds of flowchart node.
-    """
     node_type = 'node'  # flowchart.js Node Syntax: nodeType
 
     # object id: an iterator
     # each entities call next(self._node_id) to get an ID.
-    # XXX: I am not fully sure that this is thread-safe.
     _node_id = itertools.count(0)
 
     def __init__(self):
@@ -46,17 +30,8 @@ class Node(object):
 
         self.id = next(self._node_id)
 
-    def fc_definition(self) -> str:
-        """fc_definition returns the flowchart.js node definition string of current Node  (self only, subs excepted).
-        Returns a flowchart.js node definition string:
-            "node_name=>node_type: node_text".
-        And if params is not empty, regarding https://github.com/adrai/flowchart.js/issues/115,
-        it will output:
-            "node_name(param1=value1,param2=value2)=>node_type: node_text"
+    def fc_definition(self):
 
-        Returns:
-            str
-        """
         params = ''
         if self.params:
             params = ','.join((f'{k}={self.params[k]}' for k in self.params))  # 'param1=value1,param2=value2'
@@ -64,12 +39,8 @@ class Node(object):
 
         return f'{self.node_name}{params}=>{self.node_type}: {self.node_text}\n'
 
-    def fc_connection(self) -> str:
-        """fc_connection returns the flowchart.js node connection string of current Node (self only, subs excepted).
+    def fc_connection(self):
 
-        Returns:
-            a flowchart.js node connection string: "node_name->sub_node_name"
-        """
         fc_conn_str = ''
         for connection in self.connections:
             if isinstance(connection, Node):
@@ -77,20 +48,8 @@ class Node(object):
                 fc_conn_str += f'{self.node_name}{specification}->{connection.node_name}\n'
         return fc_conn_str
 
-    def _traverse(self, func, visited_flag) -> None:
-        """_traverse walking the Node graph, visiting each Node, calls func(self).
+    def _traverse(self, func, visited_flag):
 
-        Args:
-            func: function(node Node) -> bool: a function to be called on every Node.
-                Stop traverse if func returns False
-            visited_flag: something tags visited nodes.
-                The graph of Nodes maybe not an acyclic graph.
-                In this case, a visited_flag is necessary to
-                avoid the infinite recursion.
-
-        Returns:
-            None
-        """
         if self.__visited == visited_flag:
             return
 
@@ -103,65 +62,19 @@ class Node(object):
             if isinstance(c, Node):
                 c._traverse(func, visited_flag)
 
-    def connect(self, sub_node, direction='') -> None:
-        """connect: self->sub_node
-
-        This method is a shorthand for node.connections.append(sub_node)
-
-        Args:
-            sub_node: another Node object to be connected.
-            direction: connect direction: "left|right|top|bottom"
-
-        Returns:
-            None
-        """
+    def connect(self, sub_node, direction=''):
         if direction:
             self.set_connect_direction(direction)
         self.connections.append(sub_node)
 
-    def set_connect_direction(self, connect_direction) -> None:
-        """set connect direction
-
-        The following directions are available and define the direction the connection will leave the node from:
-
-        - "left"
-        - "right"
-        - "top"
-        - "bottom"
-
-        With custom connect_direction, node's fc_connection() will return
-            thisNode(connect_direction)->nextNode
-        Or,
-            condNode(yes|no, connect_direction)->nextNode
-
-        Args:
-            connect_direction: custom connect_direction, None to omit direction specification.
-
-        Returns:
-            None
-        """
+    def set_connect_direction(self, connect_direction):
         self.connect_direction = connect_direction
 
     def set_param(self, key: str, value: str):
-        """ Set a `(param=value)`.
-        See: https://github.com/adrai/flowchart.js/issues/115
-
-        Args:
-            key: str, key of param
-            value: str, value of param
-
-        Returns:
-            None
-        """
         if key and value:
             self.params[key] = value
 
-
 class NodesGroup(Node):
-    """
-    NodesGroup is a special node that can contain other nodes.
-    It makes a group of nodes look & behave like a single node.
-    """
 
     def __init__(self, head_node: Node, tail_nodes=None):
         Node.__init__(self)
@@ -186,22 +99,19 @@ class NodesGroup(Node):
 
     def append_tails(self, tail_node: Node):
         self.tails.append(tail_node)
-
-    def extend_tails(self, tail_nodes: list):
-        self.tails.extend(tail_nodes)
-
-    def fc_definition(self) -> str:
+        
+    def fc_definition(self):
         self._refresh_fc()
         return self._fc_definitions
 
-    def fc_connection(self) -> str:
+    def fc_connection(self):
         self._refresh_fc()
         return self._fc_connections
 
-    def _traverse(self, func, visited_flag) -> None:
+    def _traverse(self, func, visited_flag):
         self.head._traverse(func, visited_flag)
 
-    def _inner_traverse(self, func, visited_flag) -> None:
+    def _inner_traverse(self, func, visited_flag):
         """
         Similar to _traverse, but only visit NodesGroup head to tails.
         """
@@ -213,46 +123,35 @@ class NodesGroup(Node):
 
         self.head._traverse(func_stop_at_tails, visited_flag)
 
-    def connect(self, sub_node, direction='') -> None:
+    def connect(self, sub_node, direction=''):
         for t in self.tails:
             if isinstance(t, Node):
                 if direction:
                     t.set_connect_direction(direction)
                 t.connect(sub_node)
 
-    def _clean_fc(self) -> None:
+    def _clean_fc(self):
         """
         clean _fc_definitions & _fc_connections
         """
         self._fc_definitions = ''
         self._fc_connections = ''
 
-    def _add_node_fc(self, node: Node) -> bool:
-        """_add_node_fc visits a Node (in-group node), add it to NodesGroup.
+    def _add_node_fc(self, node: Node):
 
-        adds its fc_definition | fc_connection into self._fc_definitions | self._fc_connections.
-
-        Args:
-            node: visiting node
-
-        Returns:
-            always True
-        """
         self._fc_definitions += node.fc_definition()
         self._fc_connections += node.fc_connection()
 
         return True
 
-    def _refresh_fc(self) -> None:
-        """
-        refresh  _fc_definitions & _fc_connections
-        """
+    def _refresh_fc(self):
+
         self._clean_fc()
 
         visited_flag = f'{id(self)}-{time.time()}-{uuid.uuid4()}'
         self._traverse(self._add_node_fc, visited_flag)
 
-    def simplify(self) -> None:
+    def simplify(self):
         """
         simplify a NodesGroup
 
@@ -261,9 +160,6 @@ class NodesGroup(Node):
             ConditionNode + OperationNode => OperationNode("if xx then operation")
         """
         pass
-
-# flowchart.js flowchart DSL Nodes
-# https://github.com/adrai/flowchart.js#node-syntax
 
 class StartNode(Node):
     """StartNode is a Node subclass for flowchart.js `start` node
@@ -275,7 +171,6 @@ class StartNode(Node):
         self.node_name = f'st{self.id}'
         self.node_text = f'start{name}'
 
-
 class EndNode(Node):
     """EndNode is a Node subclass for flowchart.js `end` node
     """
@@ -286,7 +181,6 @@ class EndNode(Node):
         self.node_name = f'e{self.id}'
         self.node_text = f'end {name}'
 
-
 class OperationNode(Node):
     """OperationNode is a Node subclass for flowchart.js `operation` node
     """
@@ -296,8 +190,6 @@ class OperationNode(Node):
         self.node_name = f'op{self.id}'
         self.node_text = f'{operation}'
   
-
-
 class InputOutputNode(Node):
     """InputOutputNode is a Node subclass for flowchart.js `inputoutput` node
     """
@@ -311,7 +203,6 @@ class InputOutputNode(Node):
         self.node_name = f'io{self.id}'
         self.node_text = f'{input_or_output}: {content}'
 
-
 class SubroutineNode(Node):
     """SubroutineNode is a Node subclass for flowchart.js `subroutine` node
     """
@@ -321,7 +212,6 @@ class SubroutineNode(Node):
         super().__init__()
         self.node_name = f'sub{self.id}'
         self.node_text = f'{subroutine}'
-
 
 class ConditionNode(Node):
     """ConditionNode is a Node subclass for flowchart.js `condition` node
@@ -370,7 +260,6 @@ class ConditionNode(Node):
         """
         self.set_param('align-next', 'no')
 
-
 class CondYN(Node):
     """CondYesNode is a Node subclass for flowchart.js `cond(yes|no)->sub`
 
@@ -399,17 +288,17 @@ class CondYN(Node):
         if isinstance(sub, Node):
             self.connections = [self.sub]
 
-    def fc_definition(self) -> str:
+    def fc_definition(self):
         return ''
 
-    def fc_connection(self) -> str:
+    def fc_connection(self):
         if self.sub:
             direction = f', {self.connect_direction}' if self.connect_direction else ""
             specification = f'({self.yn}{direction})'
             return f'{self.cond.node_name}{specification}->{self.sub.node_name}\n'
         return ""
 
-    def connect(self, sub_node, direction='') -> None:
+    def connect(self, sub_node, direction=''):
         if direction:
             self.set_connect_direction(direction)
         self.connections.append(sub_node)
