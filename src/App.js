@@ -114,7 +114,7 @@ class App extends Component {
     //Whiten the code for displaying
     let whitenCode = this.whitenOriginCode(this.state.originCode)
     //Convert Code 
-    fetch("/llc?code=" + transformText).then(res => res.json()).then(data =>{
+    fetch("https://jsparkss.pythonanywhere.com/llc?code=" + transformText).then(res => res.json()).then(data =>{
       if(data.code == ""){
         alert("Convert to pseudo code failed. Please modify the code.")
       }
@@ -170,7 +170,7 @@ class App extends Component {
   justifyExecution = () =>{
     let transformText = this.state.originCode.replaceAll("\n","(enter)").replaceAll("\t","(tab)").replaceAll("+","(add)");
     //Convert Code 
-    fetch("/fc?code=" + transformText).then(res => res.json()).then(data =>{
+    fetch("https://jsparkss.pythonanywhere.com/fc?code=" + transformText).then(res => res.json()).then(data =>{
       if(data.code == ""){
         alert("Convert to flowchart code failed. Please modify the code.")
       }

@@ -1,7 +1,7 @@
 {
   "name": "pytoasm",
   "version": "0.1.0",
-  "homepage": "https://pylearn.github.io/",
+  "homepage": "https://JSparksssss.github.io/PyToAsm",
   "private": true,
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.1.1",
@@ -56,5 +56,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:5000"
+  "proxy": "https://jsparkss.pythonanywhere.com/"
 }
