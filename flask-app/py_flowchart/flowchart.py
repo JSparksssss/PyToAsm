@@ -8,8 +8,8 @@ license that can be found in the LICENSE file.
 
 import ast
 
-from ast_node import parse
-from node import NodesGroup
+from py_flowchart.ast_node import parse
+from py_flowchart.node import NodesGroup
 
 
 class Flowchart(NodesGroup):

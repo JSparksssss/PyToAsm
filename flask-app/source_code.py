@@ -1,4 +1,6 @@
-for i in range(10):
-	for j in range(i):
-		print("*")
-	print("Hello World.")
+def Module():
+	i = 0
+	total = 0
+	while i < 10:
+			total = total + i
+			i = i + 1

@@ -14,7 +14,6 @@ import Footer from './components/Footer';
 
 import Sample from "./Data/sample.json"
 import ExeVisualization from './components/ExeVisualization';
-import { parse } from '@fortawesome/fontawesome-svg-core';
 
 function findLLC(pyIndex,body){
   for(var i = 0; i < body.length; i++){
@@ -43,18 +42,14 @@ class App extends Component {
     this.samples = Sample.samples
   }
 
-  componentDidMount(){
-    
-  }
-
   renderHighlight = (pyIndex) =>{
     this.setState({markers:[]})
 
     //initialize the Highlight markers
     let markers = []
 
-    //Find the index of low level code
-    console.log(this.state.py2llcmap)
+    // //Find the index of low level code
+    // console.log(this.state.py2llcmap)
     var llc = findLLC(pyIndex,this.state.py2llcmap)
 
     try{
@@ -64,7 +59,6 @@ class App extends Component {
         }
 
         this.setState({markers:markers},()=>{
-          console.log(this.state.markers)
         })
 
     }catch(e){
@@ -116,9 +110,7 @@ class App extends Component {
   }
 
   convertCode = () =>{
-    console.log("Origin-code:",this.state.originCode);
     let transformText = this.state.originCode.replaceAll("\n","(enter)").replaceAll("\t","(tab)").replaceAll("+","(add)");
-    console.log(transformText)
     //Whiten the code for displaying
     let whitenCode = this.whitenOriginCode(this.state.originCode)
     //Convert Code 
@@ -176,15 +168,14 @@ class App extends Component {
   }
 
   justifyExecution = () =>{
-
-    console.log("Origin-code:",this.state.originCode);
     let transformText = this.state.originCode.replaceAll("\n","(enter)").replaceAll("\t","(tab)").replaceAll("+","(add)");
-    console.log("Transform Text is:", transformText)
     //Convert Code 
     fetch("/fc?code=" + transformText).then(res => res.json()).then(data =>{
-      console.log(data.code);
-      let result = this.sequenceFlowChart(data.code);
-      if(data.code){
+      if(data.code == ""){
+        alert("Convert to flowchart code failed. Please modify the code.")
+      }
+      else{
+        let result = this.sequenceFlowChart(data.code);
         this.setState({ flowChartCode:result, visualizeExecutionStatus:true})
       }
       

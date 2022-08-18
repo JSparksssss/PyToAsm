@@ -1,15 +1,15 @@
 st3=>start: startModule
-cond9=>condition: for i in range(10)
-cond29=>condition: for j in range(i)
-sub36=>subroutine: print('*')
-sub40=>subroutine: print('Hello World.')
-e44=>end: end Module
+op8=>operation: i = 0
+op10=>operation: total = 0
+cond13=>condition: while (i < 10)
+op22=>operation: total = (total + i)
+op24=>operation: i = (i + 1)
+e28=>end: end Module
 
-st3->cond9
-cond9(yes)->cond29
-cond29(yes)->sub36
-sub36(left)->cond29
-cond29(no)->sub40
-sub40(left)->cond9
-cond9(no)->e44
-
+st3->op8
+op8->op10
+op10->cond13
+cond13(yes)->op22
+op22->op24
+op24(left)->cond13
+cond13(no)->e28

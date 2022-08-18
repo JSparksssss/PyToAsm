@@ -25,12 +25,10 @@ class ExeVisualization extends Component{
     //There are not blocks for else:, we should list all else: indexes for skipping them.
     renderElseArr = (code) =>{
         let elseArr = []
-        console.log(code);
         let arr = code.split("\n");
         for(var i = 0; i < arr.length; i++){
             if(arr[i].replace(/\s*/g,"") == "else:"){
                 elseArr.push(i);
-                console.log(i);
             }
                 
         }
@@ -69,7 +67,6 @@ class ExeVisualization extends Component{
     generateCodeTable = () =>{
         var result = []
         for(var i = 0; i < this.sourceCodeArray.length; i++){
-            console.log(this.sourceCodeArray[i]);
             var el = <tr className={"visualize-code "+ (this.state.exeIndex === i ? "pta-highlight-code":"")}>{this.sourceCodeArray[i]}</tr>
             result.push(el)
         }

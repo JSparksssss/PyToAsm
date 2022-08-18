@@ -12,7 +12,7 @@ from typing import List, Tuple
 
 import astunparse
 
-from node import *
+from py_flowchart.node import *
 
 
 class AstNode(Node):

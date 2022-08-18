@@ -1,7 +1,7 @@
 import os
 from io import StringIO
 import ast_node
-import py_flowchart
+from py_flowchart.main import main
 import sys
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -42,7 +42,6 @@ def dis_python_code():
 
 @app.route('/fc')
 def fc_sample():
-
 	py_code = request.args.get('code')
 	# print(py_code)
 
@@ -60,8 +59,8 @@ def fc_sample():
 	os.rename(file_name, base + '.py')
 
 	source_py = "source_code.py"
-
-	os.system("python3 py_flowchart/main.py {0} > flowchart.txt".format(source_py))
+	main("source_code.py")
+	# os.system("python3 py_flowchart/main.py {0} > flowchart.txt".format(source_py))
 
 	with open('flowchart.txt') as file:
 		fc_code = file.read()
