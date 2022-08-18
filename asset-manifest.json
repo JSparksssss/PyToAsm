@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/PyToAsm/static/css/main.0ba4ed20.chunk.css",
-    "main.js": "/PyToAsm/static/js/main.f977562e.chunk.js",
-    "main.js.map": "/PyToAsm/static/js/main.f977562e.chunk.js.map",
+    "main.js": "/PyToAsm/static/js/main.6760c4c6.chunk.js",
+    "main.js.map": "/PyToAsm/static/js/main.6760c4c6.chunk.js.map",
     "runtime-main.js": "/PyToAsm/static/js/runtime-main.ef11dd96.js",
     "runtime-main.js.map": "/PyToAsm/static/js/runtime-main.ef11dd96.js.map",
     "static/js/2.45759970.chunk.js": "/PyToAsm/static/js/2.45759970.chunk.js",
@@ -457,6 +457,6 @@
     "static/js/runtime-main.ef11dd96.js",
     "static/js/2.45759970.chunk.js",
     "static/css/main.0ba4ed20.chunk.css",
-    "static/js/main.f977562e.chunk.js"
+    "static/js/main.6760c4c6.chunk.js"
   ]
 }
