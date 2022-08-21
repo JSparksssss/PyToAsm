@@ -25,7 +25,7 @@
         "code":"a = 1\nb = 1\nc = 1\nd = 1\nif a > 0:\n\tif b > 0:\n\t\tprint('ab')\n\t\tif c > 0:\n\t\t\tcgz()\n\t\telif d > 0:\n\t\t\tclez()\n\tprint('abc')\nelse:\n\talez()\nend_of_ifs()"
     },{
         "type":"FunctionDef",
-        "code":"def add(a,b):\n\treturn a + b\na = 1\nb = 2\nc = add(a,b)"
+        "code":"def main(a,b):\n\tfor i in range(3):\n\t\tprint(i)\n\tif a + b > 10:\n\t\treturn a + b\n\telse:\n\t\treturn a - b"
     },{
         "type":"ForLoop",
         "code":"for i in range(10):\n\tfor j in range(i):\n\t\tprint(\"*\")\n\tprint(\"Hello World.\")"
